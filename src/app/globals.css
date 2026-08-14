@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+
+  --color-cream-50: #fbf8f3;
+  --color-cream-100: #f7f1e7;
+  --color-cream-200: #efe4d1;
+  --color-cream-300: #e4d2b4;
+
+  --color-gold-50: #fbf5ea;
+  --color-gold-100: #f6e9cf;
+  --color-gold-200: #ecd39f;
+  --color-gold-300: #e0b769;
+  --color-gold-400: #d49a3f;
+  --color-gold-500: #c5852c;
+  --color-gold-600: #a86c23;
+  --color-gold-700: #87541f;
+
+  --color-date-50: #f4ede6;
+  --color-date-100: #e6d5c4;
+  --color-date-200: #cead8f;
+  --color-date-300: #b08965;
+  --color-date-400: #916845;
+  --color-date-500: #74502f;
+  --color-date-600: #5b3d23;
+  --color-date-700: #462d1a;
+  --color-date-800: #33200f;
+  --color-date-900: #24160a;
+  --color-date-950: #170e06;
+
+  --animate-marquee: marquee 38s linear infinite;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-fade-up: fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  @keyframes marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(24px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-cream-50);
+    color: var(--color-date-900);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: var(--color-gold-200);
+    color: var(--color-date-900);
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .grain {
+    background-image: radial-gradient(rgba(0, 0, 0, 0.04) 1px, transparent 1px);
+    background-size: 4px 4px;
+  }
+}
