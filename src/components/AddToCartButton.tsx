@@ -1,36 +1,37 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ShoppingBag } from "lucide-react";
+import { Check, ClipboardList } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { useCart } from "@/store/cart";
+import { useInquiry } from "@/store/cart";
 import { cn } from "@/lib/utils";
 
-export function AddToCartButton({
+export function AddToInquiryButton({
   product,
   className,
 }: {
   product: Product;
   className?: string;
 }) {
-  const addItem = useCart((s) => s.addItem);
-  const openCart = useCart((s) => s.openCart);
+  const addItem = useInquiry((s) => s.addItem);
+  const items = useInquiry((s) => s.items);
+  const openDrawer = useInquiry((s) => s.openDrawer);
   const [added, setAdded] = useState(false);
-  const soldOut = product.stock <= 0;
+  const alreadyAdded = items.some((i) => i.id === product.id);
 
-  function add() {
-    if (soldOut || added) return;
+  function handleAdd() {
+    if (alreadyAdded || added) {
+      openDrawer();
+      return;
+    }
     addItem({
       id: product.id,
       slug: product.slug,
       name: product.name,
-      price: product.price,
-      compareAtPrice: product.compareAtPrice,
       image: product.images[0] ?? "",
+      origin: product.origin,
       weight: product.weight,
-      unit: product.unit,
     });
-    openCart();
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);
   }
@@ -38,27 +39,26 @@ export function AddToCartButton({
   return (
     <button
       type="button"
-      onClick={add}
-      disabled={soldOut}
+      onClick={handleAdd}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition-all",
-        added
-          ? "bg-emerald-600 text-white"
-          : soldOut
-            ? "cursor-not-allowed bg-date-900/10 text-date-400"
-            : "bg-date-900 text-cream-50 hover:bg-date-800 hover:shadow-lg",
+        "inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-all",
+        added || alreadyAdded
+          ? "bg-gold-500 text-date-950"
+          : "bg-date-900 text-cream-50 hover:bg-date-800 hover:shadow-lg",
         className
       )}
     >
-      {soldOut ? (
-        "Sold out"
-      ) : added ? (
+      {added ? (
         <>
-          <Check size={16} /> Added to cart
+          <Check size={16} /> Added to inquiry
+        </>
+      ) : alreadyAdded ? (
+        <>
+          <ClipboardList size={16} /> View inquiry list
         </>
       ) : (
         <>
-          <ShoppingBag size={16} /> Add to cart
+          <ClipboardList size={16} /> Add to inquiry
         </>
       )}
     </button>

@@ -13,7 +13,6 @@ import { ReviewsSection } from "@/components/ReviewsSection";
 import { ProductCard } from "@/components/ProductCard";
 import { Rating } from "@/components/Rating";
 import { SectionHeading } from "@/components/SectionHeading";
-import { formatINR, discountPercent } from "@/lib/format";
 import { categoryLabel } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -46,8 +45,6 @@ export default async function ProductPage({
     getRelatedProducts(product, 4),
   ]);
 
-  const pct = discountPercent(product.price, product.compareAtPrice);
-
   return (
     <div>
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -58,7 +55,7 @@ export default async function ProductPage({
           </Link>
           <ChevronRight size={14} />
           <Link href="/products" className="transition-colors hover:text-date-900">
-            Shop
+            Products
           </Link>
           <ChevronRight size={14} />
           <Link
@@ -85,11 +82,6 @@ export default async function ProductPage({
                   {product.badge}
                 </span>
               )}
-              {pct && (
-                <span className="rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-                  Save {pct}%
-                </span>
-              )}
             </div>
 
             <h1 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight text-date-900 sm:text-4xl lg:text-[2.75rem]">
@@ -104,17 +96,13 @@ export default async function ProductPage({
               </span>
             </a>
 
-            <div className="mt-6 flex items-baseline gap-3">
-              <span className="font-display text-4xl font-semibold text-date-900">
-                {formatINR(product.price)}
+            {/* Origin info instead of price */}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <span className="rounded-full border border-date-900/10 bg-cream-100 px-4 py-2 text-sm font-medium text-date-700">
+                Origin: {product.origin}
               </span>
-              {product.compareAtPrice && (
-                <span className="text-lg text-date-400 line-through">
-                  {formatINR(product.compareAtPrice)}
-                </span>
-              )}
-              <span className="text-sm text-date-500">
-                {product.unit} · {product.weight}
+              <span className="rounded-full border border-date-900/10 bg-cream-100 px-4 py-2 text-sm font-medium text-date-700">
+                Pack: {product.weight} {product.unit}
               </span>
             </div>
 
@@ -135,7 +123,7 @@ export default async function ProductPage({
 
             <div className="mt-8 grid grid-cols-3 gap-3 rounded-2xl border border-date-900/10 bg-white p-4">
               {[
-                { icon: Truck, label: "Ships in 24h" },
+                { icon: Truck, label: "FOB shipping" },
                 { icon: Snowflake, label: "Cold-chained" },
                 { icon: FlaskConical, label: "Lab-tested" },
               ].map((t) => (
@@ -179,11 +167,11 @@ export default async function ProductPage({
               </li>
               <li className="flex gap-3">
                 <FlaskConical className="mt-0.5 shrink-0 text-gold-400" size={16} />
-                Every batch graded and lab-tested before it reaches Kolkata.
+                Every batch graded and lab-tested before export.
               </li>
               <li className="flex gap-3">
                 <Truck className="mt-0.5 shrink-0 text-gold-400" size={16} />
-                Cold-chained door to door — or full credit, no questions asked.
+                Cold-chained from grove to your port — quality guaranteed.
               </li>
             </ul>
           </div>
@@ -203,8 +191,8 @@ export default async function ProductPage({
         {related.length > 0 && (
           <section className="mt-20">
             <SectionHeading
-              eyebrow="Keep exploring"
-              title="You may also love"
+              eyebrow="Related products"
+              title="You may also be interested in"
               description="Hand-picked from the same groves."
             />
             <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4 lg:gap-x-6">
