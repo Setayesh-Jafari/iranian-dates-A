@@ -19,24 +19,25 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://mrmazafati.in"),
+  metadataBase: new URL("https://mrmazafati.com"),
   title: {
-    default: "Mr.Mazafati — Iranian Dates for Indian Importers",
+    default: "Mr.Mazafati — Premium Iranian Dates · Export & Wholesale",
     template: "%s · Mr.Mazafati",
   },
   description:
-    "Single-origin Iranian dates — Mazafati, Piarom, Zahedi and more — imported direct to India, cold-chained from our Kolkata warehouse. Premium quality for grocers, hotels and wholesalers.",
+    "Direct exporter of premium Iranian dates — Mazafati, Piarom, Zahedi and more. Bulk supply for importers, wholesalers and distributors worldwide. Cold-chained from Iran.",
   keywords: [
-    "Iranian dates",
-    "Mazafati dates",
+    "Iranian dates export",
+    "Mazafati dates wholesale",
     "Piarom dates",
-    "date importers India",
+    "date exporter Iran",
     "wholesale dates",
+    "bulk dates supplier",
   ],
   openGraph: {
-    title: "Mr.Mazafati — Iranian Dates for Indian Importers",
+    title: "Mr.Mazafati — Premium Iranian Dates · Export & Wholesale",
     description:
-      "The world's finest dates, straight to India. Single-origin, cold-chained, direct from the grove.",
+      "Direct exporter of premium Iranian dates. Bulk supply for importers worldwide. Cold-chained from the grove.",
     type: "website",
   },
 };

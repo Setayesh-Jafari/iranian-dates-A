@@ -1,102 +1,91 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Check, ShoppingBag, Truck, Zap } from "lucide-react";
+import { Check, ClipboardList, Phone, MessageCircle, Truck } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { useCart } from "@/store/cart";
-import { QuantityPicker } from "@/components/QuantityPicker";
+import { useInquiry } from "@/store/cart";
 import { cn } from "@/lib/utils";
 
+const WHATSAPP_NUMBER = "+989123456789";
+
 export function ProductPurchase({ product }: { product: Product }) {
-  const router = useRouter();
-  const addItem = useCart((s) => s.addItem);
-  const openCart = useCart((s) => s.openCart);
-  const [qty, setQty] = useState(1);
+  const addItem = useInquiry((s) => s.addItem);
+  const openDrawer = useInquiry((s) => s.openDrawer);
+  const items = useInquiry((s) => s.items);
   const [added, setAdded] = useState(false);
+  const alreadyAdded = items.some((i) => i.id === product.id);
 
-  const soldOut = product.stock <= 0;
-  const low = !soldOut && product.stock <= 15;
-
-  function base() {
-    return {
+  function addToInquiry() {
+    if (alreadyAdded || added) {
+      openDrawer();
+      return;
+    }
+    addItem({
       id: product.id,
       slug: product.slug,
       name: product.name,
-      price: product.price,
-      compareAtPrice: product.compareAtPrice,
       image: product.images[0] ?? "",
+      origin: product.origin,
       weight: product.weight,
-      unit: product.unit,
-    };
-  }
-
-  function addToCart() {
-    if (soldOut || added) return;
-    addItem(base(), qty);
-    openCart();
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 1400);
-  }
-
-  function buyNow() {
-    if (soldOut) return;
-    addItem(base(), qty);
-    router.push("/checkout");
   }
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        {!soldOut && <QuantityPicker value={qty} onChange={setQty} />}
         <button
           type="button"
-          onClick={addToCart}
-          disabled={soldOut}
+          onClick={addToInquiry}
           className={cn(
             "inline-flex flex-1 items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition-all sm:flex-none sm:px-8",
-            added
-              ? "bg-emerald-600 text-white"
-              : soldOut
-                ? "cursor-not-allowed bg-date-900/10 text-date-400"
-                : "bg-date-900 text-cream-50 hover:bg-date-800 hover:shadow-lg"
+            added || alreadyAdded
+              ? "bg-gold-500 text-date-950"
+              : "bg-date-900 text-cream-50 hover:bg-date-800 hover:shadow-lg"
           )}
         >
-          {soldOut ? (
-            "Sold out"
-          ) : added ? (
+          {added ? (
             <>
-              <Check size={16} /> Added to cart
+              <Check size={16} /> Added to inquiry
+            </>
+          ) : alreadyAdded ? (
+            <>
+              <ClipboardList size={16} /> View inquiry list
             </>
           ) : (
             <>
-              <ShoppingBag size={16} /> Add to cart
+              <ClipboardList size={16} /> Add to inquiry list
             </>
           )}
         </button>
       </div>
 
-      <button
-        type="button"
-        onClick={buyNow}
-        disabled={soldOut}
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-date-900 py-3.5 text-sm font-semibold text-date-900 transition-colors hover:bg-date-900 hover:text-cream-50 disabled:cursor-not-allowed disabled:border-date-900/10 disabled:text-date-400"
+      <Link
+        href="/inquiry"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-date-900 py-3.5 text-sm font-semibold text-date-900 transition-colors hover:bg-date-900 hover:text-cream-50"
       >
-        <Zap size={16} /> Buy it now
-      </button>
+        Request a full quote
+      </Link>
 
-      <div className="flex flex-col gap-1.5 pt-1 text-sm text-date-600">
+      <a
+        href={`https://wa.me/${WHATSAPP_NUMBER.replace("+", "")}?text=${encodeURIComponent(`Hi, I'm interested in ${product.name}. Can you share pricing and MOQ?`)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-emerald-600 py-3.5 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50"
+      >
+        <MessageCircle size={16} /> Chat on WhatsApp
+      </a>
+
+      <div className="flex flex-col gap-2 pt-2 text-sm text-date-600">
         <p className="flex items-center gap-2">
           <Truck size={15} className="text-gold-600" />
-          Free express shipping on orders over ₹2,999
+          FOB Bandar Abbas · Worldwide shipping
         </p>
-        <p className={cn("flex items-center gap-2", low ? "text-gold-700" : "text-emerald-700")}>
-          <span className={cn("h-2 w-2 rounded-full", low ? "bg-gold-500" : "bg-emerald-500")} />
-          {soldOut
-            ? "Temporarily out of stock"
-            : low
-              ? `Only ${product.stock} cartons left in stock`
-              : "In stock — ships within 24 hours"}
+        <p className="flex items-center gap-2">
+          <Phone size={15} className="text-gold-600" />
+          Response within 24 hours
         </p>
       </div>
     </div>

@@ -8,9 +8,9 @@ import { categoryLabel } from "@/lib/types";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Shop Iranian Dates",
+  title: "Product Catalog",
   description:
-    "Browse single-origin Iranian dates and date products — Mazafati, Piarom, Zahedi and more, with wholesale cartons for importers.",
+    "Browse our full range of export-grade Iranian dates — Mazafati, Piarom, Zahedi and more. Bulk supply for importers and wholesalers worldwide.",
 };
 
 function first(v: string | string[] | undefined): string | undefined {
@@ -33,26 +33,30 @@ export default async function ProductsPage({
     rating: first(sp.rating) ? Number(first(sp.rating)) : undefined,
   };
 
-  const [products, facets] = await Promise.all([getProducts(filters), getCategoryFacets()]);
+  const [products, facets] = await Promise.all([
+    getProducts(filters),
+    getCategoryFacets(),
+  ]);
 
   const heading = filters.category
     ? categoryLabel(filters.category)
     : filters.q
-      ? `Results for “${filters.q}”`
-      : "The Full Harvest";
+      ? `Results for "${filters.q}"`
+      : "Full Product Catalog";
 
   return (
     <div>
       <div className="border-b border-date-900/10 bg-cream-100">
         <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gold-600">
-            {filters.category ? "Collection" : "Shop"}
+            {filters.category ? "Collection" : "Export catalog"}
           </p>
           <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-date-900 sm:text-5xl">
             {heading}
           </h1>
           <p className="mt-3 max-w-xl text-base text-date-600">
-            Single-origin Iranian dates, graded and cold-chained from the grove to your door.
+            Export-grade Iranian dates, graded and cold-chained from the grove.
+            Add products to your inquiry list and request a custom quote.
           </p>
         </div>
       </div>
@@ -61,9 +65,12 @@ export default async function ProductsPage({
         <ProductFilters filters={filters} facets={facets} total={products.length}>
           {products.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-date-900/15 bg-white/50 px-6 py-24 text-center">
-              <p className="font-display text-xl font-semibold text-date-900">No dates found</p>
+              <p className="font-display text-xl font-semibold text-date-900">
+                No products found
+              </p>
               <p className="mt-2 max-w-sm text-sm text-date-500">
-                We couldn&apos;t match your search. Try a different keyword or clear the filters.
+                We couldn&apos;t match your search. Try a different keyword or clear
+                the filters.
               </p>
               <Link
                 href="/products"

@@ -2,182 +2,134 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
-import { ArrowRight, ShoppingBag, Trash2, X } from "lucide-react";
-import { useCart, cartSubtotal, FREE_SHIPPING_THRESHOLD } from "@/store/cart";
-import { formatINR } from "@/lib/format";
-import { QuantityPicker } from "@/components/QuantityPicker";
+import { ArrowRight, ClipboardList, X, Trash2 } from "lucide-react";
+import { useInquiry, inquiryCount } from "@/store/cart";
 import { EASE } from "@/lib/motion";
 
 export function CartDrawer() {
-  const items = useCart((s) => s.items);
-  const isOpen = useCart((s) => s.isOpen);
-  const closeCart = useCart((s) => s.closeCart);
-  const removeItem = useCart((s) => s.removeItem);
-  const setQty = useCart((s) => s.setQty);
-
-  const subtotal = cartSubtotal(items);
-  const remaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
-  const progress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && closeCart();
-    document.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
-  }, [isOpen, closeCart]);
+  const items = useInquiry((s) => s.items);
+  const isOpen = useInquiry((s) => s.isOpen);
+  const closeDrawer = useInquiry((s) => s.closeDrawer);
+  const removeItem = useInquiry((s) => s.removeItem);
+  const count = inquiryCount(items);
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          <motion.button
-            type="button"
-            aria-label="Close cart"
-            className="fixed inset-0 z-[70] bg-date-950/50 backdrop-blur-sm"
+          {/* Backdrop */}
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={closeCart}
+            transition={{ duration: 0.25 }}
+            onClick={closeDrawer}
+            className="fixed inset-0 z-[70] bg-date-950/40 backdrop-blur-sm"
           />
+
+          {/* Drawer */}
           <motion.aside
-            className="fixed inset-y-0 right-0 z-[80] flex w-full max-w-md flex-col bg-cream-50 shadow-2xl"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ duration: 0.4, ease: EASE }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="fixed bottom-0 right-0 top-0 z-[80] flex w-full max-w-md flex-col bg-cream-50 shadow-2xl"
           >
+            {/* Header */}
             <div className="flex items-center justify-between border-b border-date-900/10 px-6 py-5">
               <div className="flex items-center gap-3">
-                <ShoppingBag size={20} className="text-gold-600" />
-                <h2 className="font-display text-xl font-semibold text-date-900">Your Cart</h2>
-                <span className="text-sm text-date-500">({items.reduce((s, i) => s + i.qty, 0)})</span>
+                <ClipboardList size={20} className="text-gold-600" />
+                <h2 className="font-display text-lg font-semibold text-date-900">
+                  Inquiry List
+                </h2>
+                {count > 0 && (
+                  <span className="grid h-6 min-w-6 place-items-center rounded-full bg-gold-100 px-1.5 text-xs font-bold text-gold-700">
+                    {count}
+                  </span>
+                )}
               </div>
               <button
                 type="button"
-                onClick={closeCart}
-                aria-label="Close cart"
+                onClick={closeDrawer}
+                aria-label="Close"
                 className="grid h-10 w-10 place-items-center rounded-full text-date-600 transition-colors hover:bg-date-900/5"
               >
                 <X size={20} />
               </button>
             </div>
 
+            {/* Items */}
             {items.length === 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-5 px-8 text-center">
-                <div className="grid h-20 w-20 place-items-center rounded-full bg-cream-200/70 text-date-400">
-                  <ShoppingBag size={32} strokeWidth={1.5} />
+              <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
+                <div className="grid h-16 w-16 place-items-center rounded-full bg-cream-200 text-date-400">
+                  <ClipboardList size={28} strokeWidth={1.5} />
                 </div>
-                <div>
-                  <p className="font-display text-lg font-semibold text-date-900">Your cart is empty</p>
-                  <p className="mt-1.5 text-sm text-date-500">
-                    Discover single-origin dates from the palm gardens of Iran.
-                  </p>
-                </div>
+                <p className="mt-5 font-display text-xl font-semibold text-date-900">
+                  No products selected
+                </p>
+                <p className="mt-2 max-w-xs text-sm text-date-500">
+                  Browse our catalog and add products you&apos;re interested in.
+                  Then submit an inquiry for a custom quote.
+                </p>
                 <Link
                   href="/products"
-                  onClick={closeCart}
-                  className="inline-flex items-center gap-2 rounded-full bg-date-900 px-6 py-3 text-sm font-semibold text-cream-50 transition-colors hover:bg-date-800"
+                  onClick={closeDrawer}
+                  className="mt-6 inline-flex items-center gap-2 rounded-full bg-date-900 px-6 py-3 text-sm font-semibold text-cream-50 transition-colors hover:bg-date-800"
                 >
-                  Browse the shop <ArrowRight size={16} />
+                  Browse products <ArrowRight size={16} />
                 </Link>
               </div>
             ) : (
               <>
-                <div className="border-b border-date-900/10 px-6 py-4">
-                  {remaining > 0 ? (
-                    <p className="text-sm text-date-600">
-                      Add <span className="font-semibold text-gold-700">{formatINR(remaining)}</span> more for{" "}
-                      <span className="font-semibold text-date-900">free shipping</span>
-                    </p>
-                  ) : (
-                    <p className="text-sm font-medium text-emerald-700">
-                      ✓ You've unlocked free express shipping
-                    </p>
-                  )}
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-date-900/8">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-gold-400 to-gold-600 transition-all duration-500"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-
-                <ul className="flex-1 divide-y divide-date-900/8 overflow-y-auto px-6">
+                <ul className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
                   {items.map((item) => (
-                    <li key={item.id} className="flex gap-4 py-5">
-                      <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-xl bg-cream-200">
+                    <li
+                      key={item.id}
+                      className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-sm"
+                    >
+                      <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-lg bg-cream-200">
                         <Image
                           src={item.image}
                           alt={item.name}
                           fill
-                          sizes="80px"
+                          sizes="48px"
                           className="object-cover"
                         />
                       </div>
                       <div className="flex flex-1 flex-col">
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <Link
-                              href={`/products/${item.slug}`}
-                              onClick={closeCart}
-                              className="font-display text-[15px] font-semibold leading-snug text-date-900 hover:text-gold-700"
-                            >
-                              {item.name}
-                            </Link>
-                            <p className="mt-0.5 text-xs text-date-500">
-                              {item.weight} · {item.unit}
-                            </p>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeItem(item.id)}
-                            aria-label={`Remove ${item.name}`}
-                            className="grid h-8 w-8 shrink-0 place-items-center rounded-full text-date-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                        <div className="mt-auto flex items-center justify-between pt-3">
-                          <QuantityPicker
-                            size="sm"
-                            value={item.qty}
-                            onChange={(q) => setQty(item.id, q)}
-                          />
-                          <p className="font-semibold text-date-900">{formatINR(item.price * item.qty)}</p>
-                        </div>
+                        <p className="text-sm font-medium text-date-900 line-clamp-1">
+                          {item.name}
+                        </p>
+                        <p className="text-xs text-date-500">
+                          {item.weight} · {item.origin}
+                        </p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.id)}
+                        aria-label={`Remove ${item.name}`}
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-date-400 transition-colors hover:bg-red-50 hover:text-red-500"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </li>
                   ))}
                 </ul>
 
-                <div className="border-t border-date-900/10 bg-white/60 px-6 py-5">
-                  <div className="flex items-center justify-between text-sm text-date-600">
-                    <span>Subtotal</span>
-                    <span className="font-display text-xl font-semibold text-date-900">
-                      {formatINR(subtotal)}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-date-400">GST and shipping calculated at checkout.</p>
+                {/* Footer */}
+                <div className="border-t border-date-900/10 px-6 py-5">
+                  <p className="text-xs text-date-500 mb-4">
+                    Select products and submit your inquiry. Our team will
+                    respond with pricing within 24 hours.
+                  </p>
                   <Link
-                    href="/checkout"
-                    onClick={closeCart}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-date-900 py-4 text-sm font-semibold text-cream-50 transition-colors hover:bg-date-800"
+                    href="/inquiry"
+                    onClick={closeDrawer}
+                    className="flex w-full items-center justify-center gap-2 rounded-full bg-gold-500 py-4 text-sm font-semibold text-date-950 transition-colors hover:bg-gold-400"
                   >
-                    Proceed to checkout <ArrowRight size={16} />
+                    Submit Inquiry <ArrowRight size={16} />
                   </Link>
-                  <button
-                    type="button"
-                    onClick={closeCart}
-                    className="mt-2 w-full rounded-full py-2.5 text-sm font-medium text-date-600 transition-colors hover:text-date-900"
-                  >
-                    Continue shopping
-                  </button>
                 </div>
               </>
             )}

@@ -58,29 +58,22 @@ export const reviews = pgTable(
   (table) => [index("reviews_product_idx").on(table.productId)]
 );
 
-export const orders = pgTable("orders", {
+export const inquiries = pgTable("inquiries", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   email: text("email").notNull(),
   phone: text("phone").notNull(),
   company: text("company"),
-  gstin: text("gstin"),
-  address: text("address").notNull(),
-  city: text("city").notNull(),
-  state: text("state").notNull(),
-  pincode: text("pincode").notNull(),
-  notes: text("notes"),
+  country: text("country").notNull(),
+  city: text("city"),
+  message: text("message"),
   items: jsonb("items")
-    .$type<{ name: string; qty: number; price: number }[]>()
+    .$type<{ name: string; slug: string; quantity: string }[]>()
     .notNull(),
-  subtotal: integer("subtotal").notNull(),
-  shipping: integer("shipping").notNull(),
-  tax: integer("tax").notNull(),
-  total: integer("total").notNull(),
-  status: text("status").notNull().default("confirmed"),
+  status: text("status").notNull().default("new"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
 export type ProductRow = typeof products.$inferSelect;
 export type ReviewRow = typeof reviews.$inferSelect;
-export type OrderRow = typeof orders.$inferSelect;
+export type InquiryRow = typeof inquiries.$inferSelect;

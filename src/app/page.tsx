@@ -4,6 +4,8 @@ import {
   ArrowRight,
   BadgeCheck,
   Boxes,
+  FlaskConical,
+  Globe,
   Leaf,
   Snowflake,
   Star,
@@ -11,35 +13,32 @@ import {
 } from "lucide-react";
 import { getProductBySlug, getProducts } from "@/lib/queries";
 import { ProductCard } from "@/components/ProductCard";
-import { AddToCartButton } from "@/components/AddToCartButton";
+import { AddToInquiryButton } from "@/components/AddToCartButton";
 import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 import { Rating } from "@/components/Rating";
-import { formatINR } from "@/lib/format";
 import { CATEGORIES } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
-
-const px = (id: number) =>
-  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1200&h=900`;
 
 const MARQUEE = [
   "Single-origin",
   "Cold-chain shipped",
   "Lab-tested",
-  "GST invoiced",
-  "Kolkata warehouse",
+  "FOB Bandar Abbas",
+  "Bulk & wholesale",
   "Direct from the grove",
   "6 premium varieties",
+  "Export certified",
 ];
 
 const COLLECTIONS = [
   { slug: "premium", image: "/images/mazafati.jpg", note: "Mazafati, Piarom & medjool-style" },
   { slug: "gifts", image: "/images/gift-box.jpg", note: "Curated boxes & stuffed dates" },
-  { slug: "wholesale", image: px(36099448), note: "Bulk cartons for importers" },
-  { slug: "products", image: px(11771949), note: "Syrup, paste, sugar & more" },
-  { slug: "soft", image: px(11679690), note: "Kabkab, Rabbi & moist picks" },
-  { slug: "dry", image: px(20106286), note: "Zahedi, Sayer & more" },
+  { slug: "wholesale", image: "/images/mazafati.jpg", note: "Bulk cartons for importers" },
+  { slug: "products", image: "/images/mazafati.jpg", note: "Syrup, paste, sugar & more" },
+  { slug: "soft", image: "/images/mazafati.jpg", note: "Kabkab, Rabbi & moist picks" },
+  { slug: "dry", image: "/images/mazafati.jpg", note: "Zahedi, Sayer & more" },
 ];
 
 const TESTIMONIALS = [
@@ -86,24 +85,24 @@ export default async function HomePage() {
         <div className="relative mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center px-4 pt-24 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
             <p className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-gold-400/30 bg-gold-500/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold-300 backdrop-blur">
-              <Leaf size={13} /> Single-origin · Direct import · Est. 2009
+              <Leaf size={13} /> B2B Wholesale · Direct Export · Est. 2009
             </p>
 
             <h1
               className="animate-fade-up mt-6 font-display text-[2.7rem] font-semibold leading-[1.03] tracking-tight text-cream-50 text-balance sm:text-6xl lg:text-7xl"
               style={{ animationDelay: "80ms" }}
             >
-              The world&apos;s finest dates,{" "}
-              <span className="italic text-gold-300">straight to India.</span>
+              Iranian dates,{" "}
+              <span className="italic text-gold-300">exported direct.</span>
             </h1>
 
             <p
               className="animate-fade-up mt-6 max-w-xl text-base leading-relaxed text-cream-100/80 sm:text-lg"
               style={{ animationDelay: "160ms" }}
             >
-              From the sun-soaked groves of Bam and Hormozgan to your warehouse — we import,
-              grade and cold-chain premium Iranian dates for India&apos;s most discerning
-              importers, grocers and kitchens.
+              From the sun-soaked groves of Bam and Hormozgan — we grade,
+              cold-chain and export premium Iranian dates worldwide. Bulk
+              supply for importers, wholesalers and distributors.
             </p>
 
             <div
@@ -111,16 +110,16 @@ export default async function HomePage() {
               style={{ animationDelay: "240ms" }}
             >
               <Link
-                href="/products"
+                href="/inquiry"
                 className="inline-flex items-center gap-2 rounded-full bg-gold-500 px-7 py-3.5 text-sm font-semibold text-date-950 transition-colors hover:bg-gold-400"
               >
-                Shop the harvest <ArrowRight size={16} />
+                Request a quote <ArrowRight size={16} />
               </Link>
               <Link
-                href="/products?category=wholesale"
+                href="/products"
                 className="inline-flex items-center gap-2 rounded-full border border-cream-50/25 px-7 py-3.5 text-sm font-semibold text-cream-50 transition-colors hover:border-cream-50/60 hover:bg-cream-50/5"
               >
-                Explore wholesale
+                Browse catalog
               </Link>
             </div>
 
@@ -132,7 +131,7 @@ export default async function HomePage() {
                 <Rating value={4.9} size={15} /> 4.9 rating
               </span>
               <span className="flex items-center gap-2">
-                <BadgeCheck size={16} className="text-gold-400" /> 300+ importers
+                <BadgeCheck size={16} className="text-gold-400" /> 300+ trade partners
               </span>
               <span className="flex items-center gap-2">
                 <Snowflake size={16} className="text-gold-400" /> Cold-chain shipped
@@ -164,7 +163,7 @@ export default async function HomePage() {
           <div className="flex flex-wrap items-end justify-between gap-6">
             <SectionHeading
               eyebrow="The Collections"
-              title="Curated for every table"
+              title="Curated for every market"
               description="Six collections, one uncompromising standard — from flagship Mazafati to bulk cartons for the trade."
             />
             <Link
@@ -240,35 +239,33 @@ export default async function HomePage() {
                 Mazafati, at its absolute peak.
               </h2>
               <p className="mt-5 max-w-lg text-base leading-relaxed text-cream-100/70">
-                Hand-harvested in the palm gardens of Bam and graded to the exacting Kimia (AAA)
-                standard, our signature date is soft, syrup-rich and melts into caramel. It is
-                the date that made Iranian dates famous in India — and it leaves the grove only
-                when it&apos;s ready.
+                Hand-harvested in the palm gardens of Bam and graded to the
+                exacting Kimia (AAA) standard, our signature date is soft,
+                syrup-rich and melts into caramel. Available in bulk cartons
+                for wholesale and export.
               </p>
 
               {flagship && (
                 <>
                   <ul className="mt-7 grid gap-3 sm:grid-cols-2">
                     {flagship.highlights.slice(0, 4).map((h) => (
-                      <li key={h} className="flex items-start gap-2.5 text-sm text-cream-100/80">
-                        <BadgeCheck size={16} className="mt-0.5 shrink-0 text-gold-400" />
+                      <li
+                        key={h}
+                        className="flex items-start gap-2.5 text-sm text-cream-100/80"
+                      >
+                        <BadgeCheck
+                          size={16}
+                          className="mt-0.5 shrink-0 text-gold-400"
+                        />
                         {h}
                       </li>
                     ))}
                   </ul>
                   <div className="mt-8 flex flex-wrap items-center gap-5">
-                    <div>
-                      <p className="text-sm text-cream-100/60 line-through">
-                        {flagship.compareAtPrice ? formatINR(flagship.compareAtPrice) : ""}
-                      </p>
-                      <p className="font-display text-3xl font-semibold text-cream-50">
-                        {formatINR(flagship.price)}
-                        <span className="ml-2 text-sm font-normal text-cream-100/60">
-                          / {flagship.weight}
-                        </span>
-                      </p>
-                    </div>
-                    <AddToCartButton product={flagship} />
+                    <AddToInquiryButton
+                      product={flagship}
+                      className="bg-gold-500 text-date-950 hover:bg-gold-400"
+                    />
                     <Link
                       href={`/products/${flagship.slug}`}
                       className="inline-flex items-center gap-2 text-sm font-semibold text-gold-300 transition-colors hover:text-gold-200"
@@ -288,15 +285,15 @@ export default async function HomePage() {
         <Reveal>
           <div className="flex flex-wrap items-end justify-between gap-6">
             <SectionHeading
-              eyebrow="Bestsellers"
-              title="Loved by importers, daily"
-              description="The harvests our trade partners reorder again and again."
+              eyebrow="Export range"
+              title="Our product catalog"
+              description="Premium varieties trusted by importers across India, the Gulf and beyond."
             />
             <Link
               href="/products"
               className="inline-flex items-center gap-2 text-sm font-semibold text-gold-700 transition-colors hover:text-gold-600"
             >
-              Shop all products <ArrowRight size={16} />
+              Browse all products <ArrowRight size={16} />
             </Link>
           </div>
         </Reveal>
@@ -325,9 +322,11 @@ export default async function HomePage() {
                 />
               </div>
               <div className="absolute -bottom-6 -right-4 hidden rounded-2xl border border-gold-500/20 bg-date-900/90 px-6 py-5 shadow-2xl backdrop-blur sm:block">
-                <p className="font-display text-3xl font-semibold text-gold-300">16+</p>
+                <p className="font-display text-3xl font-semibold text-gold-300">
+                  16+
+                </p>
                 <p className="mt-1 text-xs uppercase tracking-[0.18em] text-cream-100/60">
-                  years importing
+                  years exporting
                 </p>
               </div>
             </div>
@@ -339,28 +338,30 @@ export default async function HomePage() {
                 tone="light"
                 eyebrow="From the grove"
                 title="A family of growers, a promise of quality"
-                description="Mr.Mazafati began with a single farm in Bam and a simple belief: Indian importers deserve dates that arrive exactly as they left the palm. Today we work with a network of grower families across Kerman, Hormozgan and Bushehr — every carton graded, lab-tested and cold-chained to Kolkata."
+                description="Mr.Mazafati began with a single farm in Bam and a simple belief: international importers deserve dates that arrive exactly as they left the palm. Today we work with a network of grower families across Kerman, Hormozgan and Bushehr — every carton graded, lab-tested and cold-chained for export."
               />
 
               <div className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4">
                 {[
-                  { icon: Boxes, value: "40,000+", label: "kg imported yearly" },
+                  { icon: Boxes, value: "40,000+", label: "kg exported yearly" },
                   { icon: Star, value: "4.9", label: "average rating" },
                   { icon: Truck, value: "300+", label: "trade partners" },
-                  { icon: Leaf, value: "6", label: "signature varieties" },
+                  { icon: Globe, value: "6", label: "signature varieties" },
                 ].map((s) => (
                   <div key={s.label}>
                     <s.icon size={20} className="text-gold-400" />
                     <p className="mt-3 font-display text-2xl font-semibold text-cream-50">
                       {s.value}
                     </p>
-                    <p className="mt-1 text-xs leading-snug text-cream-100/60">{s.label}</p>
+                    <p className="mt-1 text-xs leading-snug text-cream-100/60">
+                      {s.label}
+                    </p>
                   </div>
                 ))}
               </div>
 
               <Link
-                href="/products?category=wholesale"
+                href="/inquiry"
                 className="mt-10 inline-flex items-center gap-2 rounded-full border border-gold-500/40 px-6 py-3 text-sm font-semibold text-gold-300 transition-colors hover:bg-gold-500/10"
               >
                 Become a trade partner <ArrowRight size={16} />
@@ -385,18 +386,25 @@ export default async function HomePage() {
               <figure className="flex h-full flex-col rounded-3xl border border-date-900/10 bg-white p-7">
                 <div className="flex gap-0.5 text-gold-500">
                   {Array.from({ length: 5 }).map((_, j) => (
-                    <Star key={j} size={16} className="fill-current" strokeWidth={0} />
+                    <Star
+                      key={j}
+                      size={16}
+                      className="fill-current"
+                      strokeWidth={0}
+                    />
                   ))}
                 </div>
                 <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-date-700">
-                  “{t.quote}”
+                  &ldquo;{t.quote}&rdquo;
                 </blockquote>
                 <figcaption className="mt-6 flex items-center gap-3 border-t border-date-900/10 pt-5">
                   <span className="grid h-10 w-10 place-items-center rounded-full bg-gold-100 font-display text-base font-semibold text-date-800">
                     {t.name.charAt(0)}
                   </span>
                   <div>
-                    <p className="text-sm font-semibold text-date-900">{t.name}</p>
+                    <p className="text-sm font-semibold text-date-900">
+                      {t.name}
+                    </p>
                     <p className="text-xs text-date-500">{t.role}</p>
                   </div>
                 </figcaption>
