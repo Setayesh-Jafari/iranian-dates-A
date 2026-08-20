@@ -23,17 +23,9 @@ import { getDictionary } from "@/i18n";
 import { localizeProduct, localizeProducts } from "@/i18n/products";
 import { DEFAULT_LOCALE, isLocale, localePath, type Locale } from "@/i18n/config";
 import { getSortedPosts } from "@/content/blog";
+import { COLLECTION_IMAGES, SITE_IMAGES } from "@/lib/images";
 
 export const dynamic = "force-dynamic";
-
-const COLLECTION_IMAGES: Record<string, string> = {
-  premium: "/images/mazafati.jpg",
-  gifts: "/images/gift-box.jpg",
-  wholesale: "/images/mazafati.jpg",
-  products: "/images/mazafati.jpg",
-  soft: "/images/mazafati.jpg",
-  dry: "/images/mazafati.jpg",
-};
 
 const VALUE_ICONS = [Sprout, Snowflake, BadgeCheck, FileCheck];
 
@@ -61,7 +53,7 @@ export default async function HomePage({
       {/* HERO */}
       <section className="relative -mt-16 min-h-[92vh] w-full overflow-hidden bg-date-950 lg:-mt-[76px]">
         <Image
-          src="/images/hero.jpg"
+          src={SITE_IMAGES.hero}
           alt={dict.home.heroImageAlt}
           fill
           priority
@@ -234,7 +226,7 @@ export default async function HomePage({
             <Reveal>
               <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem]">
                 <Image
-                  src={flagship.images[0] ?? "/images/mazafati.jpg"}
+                  src={flagship.images[0] ?? SITE_IMAGES.flagship}
                   alt={flagship.name}
                   fill
                   sizes="(min-width:1024px) 50vw, 100vw"
@@ -318,7 +310,7 @@ export default async function HomePage({
             <div className="relative">
               <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
                 <Image
-                  src="/images/story.jpg"
+                  src={SITE_IMAGES.story}
                   alt={dict.home.storyImageAlt}
                   fill
                   sizes="(min-width:1024px) 50vw, 100vw"

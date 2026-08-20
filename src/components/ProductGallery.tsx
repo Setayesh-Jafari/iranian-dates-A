@@ -6,12 +6,13 @@ import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { EASE } from "@/lib/motion";
 import { useI18n } from "@/i18n/I18nProvider";
+import { SITE_IMAGES } from "@/lib/images";
 import { formatNumber, t } from "@/i18n";
 
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const { dict, locale } = useI18n();
   const [active, setActive] = useState(0);
-  const imgs = images.length ? images : ["/images/hero.jpg"];
+  const imgs = images.length ? images : [SITE_IMAGES.hero];
 
   return (
     <div className="flex flex-col gap-4">

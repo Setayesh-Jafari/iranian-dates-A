@@ -470,7 +470,7 @@ export const en = {
     ctaBody:
       "Send us your specification and target volume — our export desk replies with a written offer within 24 hours.",
     ctaButton: "Request a quote",
-    author: "ME MAZAFATI Export Desk",
+    author: "MAZAFATI Export Desk",
     empty: "No articles yet.",
   },
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { inter, vazirmatn } from "@/fonts";
+import { estedad, gandom, inter } from "@/fonts";
 import { getDictionary } from "@/i18n";
 import { DEFAULT_LOCALE, LOCALES, LOCALE_LABELS, dir, localePath } from "@/i18n/config";
 import { SITE } from "@/lib/site";
@@ -19,7 +19,7 @@ export default function GlobalNotFound() {
     <html
       lang={DEFAULT_LOCALE}
       dir={dir(DEFAULT_LOCALE)}
-      className={`${inter.variable} ${vazirmatn.variable}`}
+      className={`${inter.variable} ${estedad.variable} ${gandom.variable}`}
     >
       <body className="grid min-h-screen place-items-center bg-cream-50 px-6 font-sans text-date-900 antialiased">
         <main className="max-w-md text-center">

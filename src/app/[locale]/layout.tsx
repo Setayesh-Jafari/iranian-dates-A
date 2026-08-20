@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
-import { fraunces, inter, vazirmatn } from "@/fonts";
+import { estedad, fraunces, gandom, inter } from "@/fonts";
 import "../globals.css";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -114,7 +114,7 @@ export default async function LocaleLayout({
     <html
       lang={LOCALE_TAGS[locale]}
       dir={direction}
-      className={`${inter.variable} ${fraunces.variable} ${vazirmatn.variable}`}
+      className={`${inter.variable} ${fraunces.variable} ${estedad.variable} ${gandom.variable}`}
     >
       <body className="min-h-screen bg-cream-50 font-sans text-date-900 antialiased">
         <I18nProvider locale={locale} dict={dict}>

@@ -17,12 +17,12 @@ export function Logo({
   return (
     <Link
       href={href("/")}
-      aria-label="ME MAZAFATI"
+      aria-label="MAZAFATI"
       className={cn("group inline-flex items-center gap-2.5", className)}
     >
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-gold-300 via-gold-400 to-gold-600 shadow-[0_6px_16px_rgba(197,133,44,0.35)] ring-1 ring-gold-500/30">
-        <span className="font-display text-[13px] font-bold leading-none tracking-tight text-date-950">
-          ME
+        <span className="font-display text-lg font-bold leading-none tracking-tight text-date-950">
+          M
         </span>
       </span>
       <span className="flex flex-col leading-none">
@@ -32,7 +32,7 @@ export function Logo({
             light ? "text-cream-50" : "text-date-900"
           )}
         >
-          ME MAZAFATI
+          MAZAFATI
         </span>
         <span
           className={cn(

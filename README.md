@@ -1,6 +1,6 @@
-# ME MAZAFATI — Iranian Dates Export (B2B)
+# MAZAFATI — Iranian Dates Export (B2B)
 
-Bilingual (فارسی / English) B2B catalog and quotation site for **ME MAZAFATI**, an
+Bilingual (فارسی / English) B2B catalog and quotation site for **MAZAFATI**, an
 exporter of premium Iranian dates. Head office: **Isfahan, Iran**.
 
 Built with Next.js 16 (App Router), Tailwind CSS v4, Drizzle ORM and PostgreSQL.
@@ -10,8 +10,8 @@ Built with Next.js 16 (App Router), Tailwind CSS v4, Drizzle ORM and PostgreSQL.
 ## Highlights
 
 - **Bilingual with RTL** — every page lives under `/[locale]` (`/fa`, `/en`).
-  Persian is the default and renders right-to-left with the self-hosted
-  Vazirmatn font; English renders LTR with Inter/Fraunces.
+  Persian is the default and renders right-to-left with self-hosted
+  Estedad (text) + Gandom (headings); English renders LTR with Inter + Fraunces.
 - **B2B pricing model** — no prices anywhere in the public UI or public API.
   Every CTA (product card, product page, header, footer, blog, certifications)
   routes into the inquiry / RFQ system.
@@ -36,12 +36,13 @@ src/
 │  ├─ robots.ts / sitemap.ts
 │  └─ globals.css            # theme tokens + RTL rules
 ├─ content/blog.ts           # bilingual article content
+├─ lib/images.ts             # photography (same Pexels photos as the original site)
 ├─ i18n/
 │  ├─ config.ts              # locales, dir(), localePath(), negotiation
 │  ├─ dictionaries/{en,fa}.ts
 │  ├─ products.ts            # Persian copy for the seeded catalog
 │  └─ I18nProvider.tsx       # client-side dict/locale context
-├─ fonts/                    # self-hosted variable woff2 (no Google Fonts calls)
+├─ fonts/                    # self-hosted woff2: Inter, Fraunces, Estedad, Gandom
 ├─ middleware.ts             # locale detection, redirect, NEXT_LOCALE cookie
 └─ db/                       # Drizzle schema + seed
 ```
@@ -91,11 +92,11 @@ npm run build       # production build
 
 ## خلاصهٔ فارسی
 
-سایت دوزبانه (فارسی/انگلیسی) و B2B برند **ME MAZAFATI** برای صادرات خرمای ایرانی،
+سایت دوزبانه (فارسی/انگلیسی) و B2B برند **MAZAFATI** برای صادرات خرمای ایرانی،
 با دفتر مرکزی در **اصفهان**.
 
 - همهٔ صفحات زیر مسیر `/[locale]` قرار دارند؛ نسخهٔ فارسی به‌صورت راست‌به‌چپ و با
-  فونت وزیرمتن نمایش داده می‌شود.
+  فونت استعداد (متن) و گندم (تیترها) نمایش داده می‌شود.
 - قیمت‌ها در هیچ بخش عمومی (رابط کاربری و API) نمایش داده نمی‌شوند و همهٔ دکمه‌های
   فراخوان به سیستم استعلام قیمت متصل هستند.
 - بلاگ سئو در مسیر `/blog` با مقالات دوزبانه، داده‌های ساختاریافته و نقشهٔ سایت.

@@ -81,10 +81,10 @@
     --font-heading: var(--font-fraunces);
   }
 
-  /* Persian & other RTL locales use Vazirmatn for both body and headings */
+  /* Persian & other RTL locales: Estedad for text, Gandom for headings */
   html[dir="rtl"] {
-    --font-body: var(--font-vazirmatn);
-    --font-heading: var(--font-vazirmatn);
+    --font-body: var(--font-estedad);
+    --font-heading: var(--font-gandom);
   }
 
   html {
@@ -94,6 +94,18 @@
 
   html[dir="rtl"] body {
     letter-spacing: 0;
+    /* Persian needs a little more air between lines than Latin */
+    line-height: 1.85;
+  }
+
+  /* Persian script has no italics — keep the accent word upright */
+  html[dir="rtl"] .italic {
+    font-style: normal;
+  }
+
+  html[dir="rtl"] :is(h1, h2, h3, h4) {
+    line-height: 1.55;
+    font-weight: 700;
   }
 
   /* Persian headings do not benefit from tight tracking */

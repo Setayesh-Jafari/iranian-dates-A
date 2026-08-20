@@ -48,7 +48,7 @@ const PRODUCTS: SeedProduct[] = [
     featured: true,
     isNew: false,
     badge: "Bestseller",
-    images: ["/images/mazafati.jpg", px(15913423), px(15913411), px(20106286)],
+    images: [px(15913423), px(15913411), px(20106286), px(15707374)],
     highlights: [
       "Single-origin Kimia grade (AAA)",
       "Hand-harvested at peak ripeness",
@@ -360,7 +360,7 @@ const PRODUCTS: SeedProduct[] = [
     featured: true,
     isNew: false,
     badge: "Gift",
-    images: ["/images/gift-box.jpg", px(20632754), px(20632746), px(6200512)],
+    images: [px(20632754), px(20632746), px(6200512), px(20632745)],
     highlights: [
       "Four signature varieties",
       "Silk-lined wooden box",

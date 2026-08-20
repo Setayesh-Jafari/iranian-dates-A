@@ -52,7 +52,7 @@ export const useInquiry = create<InquiryState>()(
       toggleDrawer: () => set((state) => ({ isOpen: !state.isOpen })),
     }),
     {
-      name: "memazafati-inquiry-v1",
+      name: "mazafati-inquiry-v1",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ items: state.items }),
     }

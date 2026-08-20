@@ -1,15 +1,15 @@
 /**
  * Single source of truth for brand + company data.
- * Brand: ME MAZAFATI · Head office: Isfahan, Iran.
+ * Brand: MAZAFATI · Head office: Isfahan, Iran.
  */
 
 export const SITE = {
-  brand: "ME MAZAFATI",
-  brandFa: "ME MAZAFATI",
-  legalName: "ME MAZAFATI Date Export Co.",
-  legalNameFa: "شرکت صادراتی خرما ME MAZAFATI",
-  url: "https://memazafati.com",
-  email: "export@memazafati.com",
+  brand: "MAZAFATI",
+  brandFa: "MAZAFATI",
+  legalName: "MAZAFATI Date Export Co.",
+  legalNameFa: "شرکت صادراتی خرمای MAZAFATI",
+  url: "https://mazafati.com",
+  email: "export@mazafati.com",
   phone: "+98 913 123 4567",
   whatsapp: "989131234567",
   foundedYear: 2009,
