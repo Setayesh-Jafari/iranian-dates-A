@@ -529,7 +529,7 @@ const REVIEWS: Record<string, SeedReview[]> = {
 
 async function main() {
   console.log("Seeding database…");
-  await db.execute(sql`TRUNCATE TABLE reviews, orders, products RESTART IDENTITY CASCADE`);
+  await db.execute(sql`TRUNCATE TABLE reviews, inquiries, products RESTART IDENTITY CASCADE`);
 
   let totalReviews = 0;
   for (const p of PRODUCTS) {
