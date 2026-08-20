@@ -9,8 +9,7 @@ export function serializeProduct(p: ProductRow): Product {
     tagline: p.tagline,
     description: p.description,
     details: p.details,
-    price: p.price,
-    compareAtPrice: p.compareAtPrice,
+    // price / compareAtPrice intentionally omitted: B2B catalog, quotes only.
     category: p.category,
     origin: p.origin,
     weight: p.weight,

@@ -4,12 +4,18 @@ import Link from "next/link";
 import { useState } from "react";
 import { Check, ClipboardList, Phone, MessageCircle, Truck } from "lucide-react";
 import type { Product } from "@/lib/types";
-import { useInquiry } from "@/store/cart";
+import { useInquiry } from "@/store/inquiry";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/I18nProvider";
+import { t } from "@/i18n";
+import { whatsappLink } from "@/lib/site";
 
-const WHATSAPP_NUMBER = "+989123456789";
-
+/**
+ * B2B purchase block: no price, no add-to-cart — every CTA routes into the
+ * inquiry (RFQ) system.
+ */
 export function ProductPurchase({ product }: { product: Product }) {
+  const { dict, href } = useI18n();
   const addItem = useInquiry((s) => s.addItem);
   const openDrawer = useInquiry((s) => s.openDrawer);
   const items = useInquiry((s) => s.items);
@@ -35,6 +41,13 @@ export function ProductPurchase({ product }: { product: Product }) {
 
   return (
     <div className="space-y-4">
+      <div className="rounded-2xl border border-dashed border-gold-500/40 bg-gold-50 px-5 py-4">
+        <p className="font-display text-lg font-semibold text-date-900">
+          {dict.common.priceOnRequest}
+        </p>
+        <p className="mt-1 text-sm text-date-600">{dict.common.pricingNote}</p>
+      </div>
+
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
@@ -48,44 +61,46 @@ export function ProductPurchase({ product }: { product: Product }) {
         >
           {added ? (
             <>
-              <Check size={16} /> Added to inquiry
+              <Check size={16} /> {dict.product.addedToInquiry}
             </>
           ) : alreadyAdded ? (
             <>
-              <ClipboardList size={16} /> View inquiry list
+              <ClipboardList size={16} /> {dict.product.viewInquiry}
             </>
           ) : (
             <>
-              <ClipboardList size={16} /> Add to inquiry list
+              <ClipboardList size={16} /> {dict.product.addToInquiry}
             </>
           )}
         </button>
       </div>
 
       <Link
-        href="/inquiry"
+        href={href("/inquiry")}
         className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-date-900 py-3.5 text-sm font-semibold text-date-900 transition-colors hover:bg-date-900 hover:text-cream-50"
       >
-        Request a full quote
+        {dict.product.requestFullQuote}
       </Link>
 
       <a
-        href={`https://wa.me/${WHATSAPP_NUMBER.replace("+", "")}?text=${encodeURIComponent(`Hi, I'm interested in ${product.name}. Can you share pricing and MOQ?`)}`}
+        href={whatsappLink(
+          t(dict.product.whatsappMessage, { product: product.name })
+        )}
         target="_blank"
         rel="noopener noreferrer"
         className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-emerald-600 py-3.5 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50"
       >
-        <MessageCircle size={16} /> Chat on WhatsApp
+        <MessageCircle size={16} /> {dict.common.whatsapp}
       </a>
 
       <div className="flex flex-col gap-2 pt-2 text-sm text-date-600">
         <p className="flex items-center gap-2">
           <Truck size={15} className="text-gold-600" />
-          FOB Bandar Abbas · Worldwide shipping
+          {dict.product.fobNote}
         </p>
         <p className="flex items-center gap-2">
           <Phone size={15} className="text-gold-600" />
-          Response within 24 hours
+          {dict.product.responseNote}
         </p>
       </div>
     </div>

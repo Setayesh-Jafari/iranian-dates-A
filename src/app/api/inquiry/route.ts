@@ -7,7 +7,11 @@ export const dynamic = "force-dynamic";
 type InquiryItem = { name?: unknown; slug?: unknown; quantity?: unknown };
 
 export async function POST(request: Request) {
-  let body: { items?: InquiryItem[]; customer?: Record<string, unknown> };
+  let body: {
+    items?: InquiryItem[];
+    customer?: Record<string, unknown>;
+    locale?: unknown;
+  };
   try {
     body = await request.json();
   } catch {
@@ -15,6 +19,7 @@ export async function POST(request: Request) {
   }
 
   const { items, customer = {} } = body ?? {};
+  const locale = body?.locale === "fa" ? "fa" : "en";
 
   if (!Array.isArray(items) || items.length === 0) {
     return Response.json(
@@ -61,7 +66,10 @@ export async function POST(request: Request) {
     company: company ? company.slice(0, 120) : null,
     country: country.slice(0, 80),
     city: city ? city.slice(0, 60) : null,
-    message: message ? message.slice(0, 1000) : null,
+    message: [message, `locale: ${locale}`]
+      .filter(Boolean)
+      .join("\n")
+      .slice(0, 1000),
     items: cleanItems,
     status: "new",
   });

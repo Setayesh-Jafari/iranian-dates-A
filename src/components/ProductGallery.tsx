@@ -5,8 +5,11 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { EASE } from "@/lib/motion";
+import { useI18n } from "@/i18n/I18nProvider";
+import { formatNumber, t } from "@/i18n";
 
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
+  const { dict, locale } = useI18n();
   const [active, setActive] = useState(0);
   const imgs = images.length ? images : ["/images/hero.jpg"];
 
@@ -24,7 +27,10 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
           >
             <Image
               src={imgs[active]}
-              alt={`${name} — image ${active + 1}`}
+              alt={t(dict.product.galleryImage, {
+              product: name,
+              n: formatNumber(active + 1, locale),
+            })}
               fill
               sizes="(min-width:1024px) 50vw, 100vw"
               className="object-cover"
@@ -40,7 +46,9 @@ export function ProductGallery({ images, name }: { images: string[]; name: strin
             key={`${src}-${i}`}
             type="button"
             onClick={() => setActive(i)}
-            aria-label={`View image ${i + 1}`}
+            aria-label={t(dict.product.viewImage, {
+              n: formatNumber(i + 1, locale),
+            })}
             className={cn(
               "relative aspect-square overflow-hidden rounded-xl bg-cream-200 transition-all duration-300",
               i === active

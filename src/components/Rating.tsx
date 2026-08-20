@@ -15,7 +15,7 @@ export function Rating({
     <span
       className={cn("relative inline-flex shrink-0", className)}
       role="img"
-      aria-label={`Rated ${value} out of 5`}
+      aria-label={`${value} / 5`}
     >
       <span className="flex gap-0.5 text-date-900/15">
         {Array.from({ length: 5 }).map((_, i) => (
