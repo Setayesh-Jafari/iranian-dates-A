@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: var(--font-fraunces), ui-serif, Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-heading), ui-serif, Georgia, "Times New Roman", serif;
 
   --color-cream-50: #fbf8f3;
   --color-cream-100: #f7f1e7;
@@ -43,6 +43,15 @@
     }
   }
 
+  @keyframes marquee-rtl {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(50%);
+    }
+  }
+
   @keyframes float {
     0%,
     100% {
@@ -66,9 +75,49 @@
 }
 
 @layer base {
+  :root {
+    /* Latin stack (default / English) */
+    --font-body: var(--font-inter);
+    --font-heading: var(--font-fraunces);
+  }
+
+  /* Persian & other RTL locales: Estedad for text, Gandom for headings */
+  html[dir="rtl"] {
+    --font-body: var(--font-estedad);
+    --font-heading: var(--font-gandom);
+  }
+
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+  }
+
+  html[dir="rtl"] body {
+    letter-spacing: 0;
+    /* Persian needs a little more air between lines than Latin */
+    line-height: 1.85;
+  }
+
+  /* Persian script has no italics — keep the accent word upright */
+  html[dir="rtl"] .italic {
+    font-style: normal;
+  }
+
+  html[dir="rtl"] :is(h1, h2, h3, h4) {
+    line-height: 1.55;
+    font-weight: 700;
+  }
+
+  /* Persian headings do not benefit from tight tracking */
+  html[dir="rtl"] .tracking-tight,
+  html[dir="rtl"] .tracking-wide,
+  html[dir="rtl"] .tracking-wider {
+    letter-spacing: 0;
+  }
+
+  /* Keep the ticker moving with the reading direction */
+  html[dir="rtl"] .animate-marquee {
+    animation-name: marquee-rtl;
   }
 
   body {

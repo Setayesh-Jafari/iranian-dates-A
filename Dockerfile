@@ -31,7 +31,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # Copy migration & seed files + install minimal deps for startup
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
-COPY drizzle.config.json ./
+COPY drizzle.config.ts ./
 COPY src/db ./src/db
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh

@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export function Logo({
   tone = "dark",
@@ -8,22 +11,28 @@ export function Logo({
   tone?: "light" | "dark";
   className?: string;
 }) {
+  const { dict, href } = useI18n();
   const light = tone === "light";
+
   return (
-    <Link href="/" className={cn("group inline-flex items-center gap-2.5", className)}>
+    <Link
+      href={href("/")}
+      aria-label="MAZAFATI"
+      className={cn("group inline-flex items-center gap-2.5", className)}
+    >
       <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-gold-300 via-gold-400 to-gold-600 shadow-[0_6px_16px_rgba(197,133,44,0.35)] ring-1 ring-gold-500/30">
-        <span className="font-display text-lg font-semibold leading-none text-date-950">
+        <span className="font-display text-lg font-bold leading-none tracking-tight text-date-950">
           M
         </span>
       </span>
       <span className="flex flex-col leading-none">
         <span
           className={cn(
-            "font-display text-xl font-semibold tracking-tight transition-colors",
+            "font-display text-lg font-semibold uppercase tracking-[0.06em] transition-colors sm:text-xl",
             light ? "text-cream-50" : "text-date-900"
           )}
         >
-          Mr.Mazafati
+          MAZAFATI
         </span>
         <span
           className={cn(
@@ -31,7 +40,7 @@ export function Logo({
             light ? "text-cream-50/55" : "text-date-500"
           )}
         >
-          Iranian Dates
+          {dict.logo.tagline}
         </span>
       </span>
     </Link>

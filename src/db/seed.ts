@@ -48,7 +48,7 @@ const PRODUCTS: SeedProduct[] = [
     featured: true,
     isNew: false,
     badge: "Bestseller",
-    images: ["/images/mazafati.jpg", px(15913423), px(15913411), px(20106286)],
+    images: [px(15913423), px(15913411), px(20106286), px(15707374)],
     highlights: [
       "Single-origin Kimia grade (AAA)",
       "Hand-harvested at peak ripeness",
@@ -360,7 +360,7 @@ const PRODUCTS: SeedProduct[] = [
     featured: true,
     isNew: false,
     badge: "Gift",
-    images: ["/images/gift-box.jpg", px(20632754), px(20632746), px(6200512)],
+    images: [px(20632754), px(20632746), px(6200512), px(20632745)],
     highlights: [
       "Four signature varieties",
       "Silk-lined wooden box",
@@ -373,9 +373,9 @@ const PRODUCTS: SeedProduct[] = [
     name: "Mazafati Wholesale Carton · 10 kg",
     tagline: "Food-grade carton, direct-import pricing",
     description:
-      "Food-grade carton of our signature Kimia-grade Mazafati, cold-chain shipped from our Kolkata warehouse. Direct-import pricing for wholesalers, retailers and re-packers.",
+      "Food-grade carton of our signature Kimia-grade Mazafati, cold-chain shipped from our Isfahan warehouse. Direct-import pricing for wholesalers, retailers and re-packers.",
     details:
-      "10 kg food-grade carton · Vacuum bagged in 1 kg packs · MOQ: 1 carton · GST invoice available.",
+      "10 kg food-grade carton · Vacuum bagged in 1 kg packs · MOQ: 1 carton · Commercial invoice and export documents available.",
     price: 10990,
     compareAtPrice: null,
     category: "wholesale",
@@ -391,7 +391,7 @@ const PRODUCTS: SeedProduct[] = [
       "Direct-import pricing",
       "Vacuum-bagged in 1 kg packs",
       "Cold-chain shipped",
-      "GST invoice available",
+      "Commercial invoice available",
     ],
   },
   {

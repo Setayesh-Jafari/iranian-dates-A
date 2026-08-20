@@ -1,11 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
+const subscribe = () => () => {};
+
+/**
+ * True after hydration. Used to avoid SSR/client mismatches for values that
+ * only exist in the browser (e.g. the persisted inquiry list).
+ */
 export function useMounted(): boolean {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-  return mounted;
+  return useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false
+  );
 }

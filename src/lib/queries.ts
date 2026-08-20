@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { products, reviews } from "@/db/schema";
-import { and, asc, desc, eq, gte, ilike, lte, ne, or, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gte, ilike, ne, or, type SQL } from "drizzle-orm";
 import { serializeProduct, serializeReview } from "@/lib/serialize";
 import type { Product, Review } from "@/lib/types";
 
@@ -8,8 +8,6 @@ export type ProductFilters = {
   category?: string;
   q?: string;
   sort?: string;
-  minPrice?: number;
-  maxPrice?: number;
   minRating?: number;
   limit?: number;
 };
@@ -23,17 +21,12 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
     const searchCondition = or(ilike(products.name, like), ilike(products.description, like));
     if (searchCondition) conditions.push(searchCondition);
   }
-  if (filters.minPrice && filters.minPrice > 0) conditions.push(gte(products.price, filters.minPrice));
-  if (filters.maxPrice && filters.maxPrice > 0) conditions.push(lte(products.price, filters.maxPrice));
   if (filters.minRating && filters.minRating > 0) conditions.push(gte(products.rating, filters.minRating));
 
   const order: SQL[] = [];
   switch (filters.sort) {
-    case "price-asc":
-      order.push(asc(products.price));
-      break;
-    case "price-desc":
-      order.push(desc(products.price));
+    case "name":
+      order.push(asc(products.name));
       break;
     case "rating":
       order.push(desc(products.rating));
