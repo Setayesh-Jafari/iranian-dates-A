@@ -89,12 +89,20 @@ export default async function ProductPage({
             </h1>
             <p className="mt-2 text-base text-date-600">{product.tagline}</p>
 
-            <a href="#reviews" className="mt-4 inline-flex items-center gap-2">
-              <Rating value={product.rating} size={17} />
-              <span className="text-sm text-date-600">
-                {product.rating.toFixed(1)} · {product.reviewCount} reviews
-              </span>
-            </a>
+            {product.reviewCount > 0 ? (
+              <a href="#reviews" className="mt-4 inline-flex items-center gap-2">
+                <Rating value={product.rating} size={17} />
+                <span className="text-sm text-date-600">
+                  {product.rating.toFixed(1)} · {product.reviewCount} reviews
+                </span>
+              </a>
+            ) : (
+              <a href="#reviews" className="mt-4 inline-flex items-center gap-2">
+                <span className="text-sm text-date-500">
+                  No customer reviews published yet.
+                </span>
+              </a>
+            )}
 
             {/* Origin info instead of price */}
             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -123,9 +131,9 @@ export default async function ProductPage({
 
             <div className="mt-8 grid grid-cols-3 gap-3 rounded-2xl border border-date-900/10 bg-white p-4">
               {[
-                { icon: Truck, label: "FOB shipping" },
-                { icon: Snowflake, label: "Cold-chained" },
-                { icon: FlaskConical, label: "Lab-tested" },
+                { icon: Truck, label: "Shipping options on request" },
+                { icon: Snowflake, label: "Pack options on request" },
+                { icon: FlaskConical, label: "Specs on request" },
               ].map((t) => (
                 <div key={t.label} className="flex flex-col items-center gap-2 text-center">
                   <t.icon size={18} className="text-gold-600" />
@@ -159,19 +167,22 @@ export default async function ProductPage({
           </div>
 
           <div className="rounded-3xl bg-gradient-to-br from-date-900 to-date-950 p-8 text-cream-50">
-            <h2 className="font-display text-xl font-semibold">Our promise</h2>
+            <h2 className="font-display text-xl font-semibold">Good to know</h2>
             <ul className="mt-5 space-y-4 text-sm text-cream-100/80">
               <li className="flex gap-3">
                 <Leaf className="mt-0.5 shrink-0 text-gold-400" size={16} />
-                Harvested by grower families we&apos;ve worked with for over a decade.
+                Product specifications, grading and packing details are
+                available upon request.
               </li>
               <li className="flex gap-3">
                 <FlaskConical className="mt-0.5 shrink-0 text-gold-400" size={16} />
-                Every batch graded and lab-tested before export.
+                Certification documents are available for applicable
+                shipments — requirements are confirmed per destination.
               </li>
               <li className="flex gap-3">
                 <Truck className="mt-0.5 shrink-0 text-gold-400" size={16} />
-                Cold-chained from grove to your port — quality guaranteed.
+                Shipping options and Incoterms are discussed with our export
+                team for each order.
               </li>
             </ul>
           </div>
@@ -193,7 +204,7 @@ export default async function ProductPage({
             <SectionHeading
               eyebrow="Related products"
               title="You may also be interested in"
-              description="Hand-picked from the same groves."
+              description="From the same collection."
             />
             <div className="mt-10 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-4 lg:gap-x-6">
               {related.map((p) => (

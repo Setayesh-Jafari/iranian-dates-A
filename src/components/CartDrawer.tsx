@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, ClipboardList, X, Trash2 } from "lucide-react";
 import { useInquiry, inquiryCount } from "@/store/cart";
+import { unitLabel } from "@/lib/inquiry";
 import { EASE } from "@/lib/motion";
 
 export function CartDrawer() {
@@ -104,6 +105,11 @@ export function CartDrawer() {
                         <p className="text-xs text-date-500">
                           {item.weight} · {item.origin}
                         </p>
+                        <p className="text-xs text-date-500">
+                          {item.quantity && Number(item.quantity) > 0
+                            ? `Quantity: ${item.quantity} ${unitLabel(item.unit)}`
+                            : "Quantity: set on the inquiry form"}
+                        </p>
                       </div>
                       <button
                         type="button"
@@ -121,7 +127,7 @@ export function CartDrawer() {
                 <div className="border-t border-date-900/10 px-6 py-5">
                   <p className="text-xs text-date-500 mb-4">
                     Select products and submit your inquiry. Our team will
-                    respond with pricing within 24 hours.
+                    respond with pricing and current availability.
                   </p>
                   <Link
                     href="/inquiry"

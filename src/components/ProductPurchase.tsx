@@ -2,12 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Check, ClipboardList, Phone, MessageCircle, Truck } from "lucide-react";
+import { Check, ClipboardList, FileText, Truck } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useInquiry } from "@/store/cart";
 import { cn } from "@/lib/utils";
-
-const WHATSAPP_NUMBER = "+989123456789";
 
 export function ProductPurchase({ product }: { product: Product }) {
   const addItem = useInquiry((s) => s.addItem);
@@ -69,23 +67,14 @@ export function ProductPurchase({ product }: { product: Product }) {
         Request a full quote
       </Link>
 
-      <a
-        href={`https://wa.me/${WHATSAPP_NUMBER.replace("+", "")}?text=${encodeURIComponent(`Hi, I'm interested in ${product.name}. Can you share pricing and MOQ?`)}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-flex w-full items-center justify-center gap-2 rounded-full border border-emerald-600 py-3.5 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50"
-      >
-        <MessageCircle size={16} /> Chat on WhatsApp
-      </a>
-
       <div className="flex flex-col gap-2 pt-2 text-sm text-date-600">
         <p className="flex items-center gap-2">
           <Truck size={15} className="text-gold-600" />
-          FOB Bandar Abbas · Worldwide shipping
+          Shipping options and Incoterms are confirmed per order.
         </p>
         <p className="flex items-center gap-2">
-          <Phone size={15} className="text-gold-600" />
-          Response within 24 hours
+          <FileText size={15} className="text-gold-600" />
+          Product specifications available upon request.
         </p>
       </div>
     </div>

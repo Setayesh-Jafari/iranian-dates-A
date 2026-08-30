@@ -8,89 +8,95 @@ import {
   Globe,
   Leaf,
   ShieldCheck,
-  Snowflake,
   Thermometer,
 } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
 
 export const metadata: Metadata = {
-  title: "Certifications & Quality",
+  title: "Export Documentation & Quality",
   description:
-    "Our export certifications, lab testing protocols and quality assurance processes for Iranian date exports.",
+    "Overview of export documentation and quality processes for Iranian date shipments. Specifics are confirmed per shipment and destination.",
 };
+
+// NOTE (content policy): The items below describe documents that are commonly
+// REQUIRED FOR or ARRANGED ON APPLICABLE agricultural export shipments from
+// Iran. They are intentionally phrased so they do NOT assert that the company
+// currently holds any certification. Company-held certificates and test
+// results are pending business verification and must be confirmed before
+// being presented as facts.
 
 const CERTIFICATIONS = [
   {
     icon: FlaskConical,
     name: "Health Certificate",
-    issuer: "Iran Veterinary Organization",
+    issuer: "Issued by the competent authority in the exporting country",
     description:
-      "Every batch is tested for microbiological safety — coliforms, E. coli, salmonella, mould and yeast. Issued per shipment.",
+      "A health certificate is commonly requested for food consignments. Where required, laboratory testing details (e.g. microbiological parameters) are specified by the destination market and confirmed per shipment.",
     details: [
-      "Microbiological lab testing",
-      "Issued per shipment",
-      "Recognized by FSSAI (India)",
+      "Requested by some destination authorities",
+      "Arranged for applicable shipments",
+      "Requirements confirmed per order",
     ],
   },
   {
     icon: Leaf,
     name: "Phytosanitary Certificate",
-    issuer: "Plant Protection Organization of Iran",
+    issuer: "Issued by the national plant protection organization",
     description:
-      "Confirms our dates are free from quarantine pests and diseases. Required for all agricultural exports from Iran.",
+      "Phytosanitary certificates are generally required for plant products imported into many markets, including India. Requirements and treatment conditions are confirmed with the destination authority per shipment.",
     details: [
-      "Pest-free certification",
-      "Required by Indian customs",
-      "Issued per shipment",
+      "Commonly required for plant products",
+      "Arranged for applicable shipments",
+      "Conditions confirmed per order",
     ],
   },
   {
     icon: Globe,
     name: "Certificate of Origin",
-    issuer: "Iran Chamber of Commerce",
+    issuer: "Issued by the recognized chamber of commerce",
     description:
-      "Officially certifies that our dates are grown and processed in Iran — specifically Bam, Kerman for Mazafati.",
+      "A certificate of origin confirms where goods were produced. It is commonly required for customs clearance and preferential tariff treatment, and is arranged for applicable shipments.",
     details: [
-      "Confirms Iranian origin",
-      "Required for preferential tariffs",
-      "Issued per shipment",
+      "Confirms origin of goods",
+      "Commonly required for customs",
+      "Arranged for applicable shipments",
     ],
   },
   {
     icon: ShieldCheck,
     name: "Fumigation Certificate",
-    issuer: "Licensed fumigation companies at Bandar Abbas port",
+    issuer: "Issued by licensed treatment providers",
     description:
-      "Container and wooden pallets are fumigated with methyl bromide to ensure pest-free transit.",
+      "Some destinations require fumigation or treatment of consignments and packaging. Whether it is required, and the method used, depends on the destination's rules and is confirmed per shipment.",
     details: [
-      "Container fumigation",
-      "Pallet treatment",
-      "Issued per shipment",
+      "Required by some destinations",
+      "Method per destination rules",
+      "Confirmed per shipment",
     ],
   },
   {
     icon: FileCheck,
-    name: "Quality Certificate",
-    issuer: "Internal QA + third-party labs",
+    name: "Quality / Grading Report",
+    issuer: "Provided with the shipment where agreed",
     description:
-      "Detailed grading report covering size, moisture, sugar content, colour uniformity and defect count.",
+      "Grading and specification reports (size, moisture, defect counts, etc.) can be agreed and included with a shipment. Exact parameters are defined in the order discussion.",
     details: [
-      "Moisture: 15–18% for Mazafati",
-      "Sugar: 65–70%",
-      "Grade A/B/C classification",
+      "Parameters agreed per order",
+      "Provided where applicable",
+      "Specification sheets on request",
     ],
   },
   {
     icon: Thermometer,
-    name: "Cold Chain Protocol",
-    issuer: "Internal logistics",
+    name: "Temperature-Controlled Transport",
+    issuer: "Arranged via carriers where required",
     description:
-      "From harvest to delivery — our dates are stored and shipped at +5°C to preserve freshness and extend shelf life.",
+      "For varieties that benefit from it, temperature-controlled (reefer) transport can be arranged. Whether it is used, and at what setpoint, is confirmed with the carrier and the order terms.",
     details: [
-      "Reefer containers (+5°C)",
-      "Cold storage at warehouse",
-      "Temperature logging",
+      "Arranged where required",
+      "Setpoints per product & route",
+      "Confirmed in order terms",
     ],
   },
 ];
@@ -99,32 +105,32 @@ const QUALITY_STEPS = [
   {
     step: "01",
     title: "Sourcing",
-    text: "We work directly with grower families in Bam, Hormozgan and Bushehr — no middlemen.",
+    text: "Products are sourced in Iran. Sourcing partners and origin details can be shared on request during the order discussion.",
   },
   {
     step: "02",
     title: "Grading",
-    text: "Every date is hand-sorted by size, colour and texture. Grade A for export, Grade B for domestic.",
+    text: "Dates are graded before export. The grading criteria applied to your order are confirmed with our team.",
   },
   {
     step: "03",
-    title: "Lab Testing",
-    text: "Independent labs test for microbiological safety, pesticide residues and heavy metals.",
+    title: "Testing",
+    text: "Laboratory testing, where required by the destination market, is arranged before shipment. Test scope is agreed per order.",
   },
   {
     step: "04",
     title: "Packaging",
-    text: "Vacuum-sealed, food-grade cartons on fumigated pallets. Labels include all nutritional and origin data.",
+    text: "Packaging and labelling can be tailored to destination requirements. Available formats are listed on request.",
   },
   {
     step: "05",
-    title: "Cold Chain",
-    text: "Reefer containers at +5°C from our warehouse to your port. Temperature monitored throughout.",
+    title: "Transport",
+    text: "Shipping options — including temperature-controlled transport where applicable — are discussed per order and route.",
   },
   {
     step: "06",
     title: "Documentation",
-    text: "Full set of export certificates — Health, Phyto, Origin, Fumigation and Quality — accompany every shipment.",
+    text: "Export documents required for your destination (origin, health, phytosanitary, etc.) are arranged for applicable shipments.",
   },
 ];
 
@@ -140,26 +146,43 @@ export default function CertificationsPage() {
                 Quality & compliance
               </p>
               <h1 className="mt-4 font-display text-4xl font-semibold leading-[1.05] tracking-tight sm:text-5xl lg:text-6xl">
-                Every carton,{" "}
-                <span className="italic text-gold-300">fully certified.</span>
+                Export documentation,{" "}
+                <span className="italic text-gold-300">explained clearly.</span>
               </h1>
               <p className="mt-6 max-w-xl text-base leading-relaxed text-cream-100/70 sm:text-lg">
-                We don&apos;t just export dates — we export trust. Every shipment
-                leaves Iran with a complete set of internationally recognized
-                certificates, backed by independent lab testing.
+                Certification requirements for food imports vary by destination
+                and product. The overview below describes documents that are
+                commonly required for — and can be arranged on — applicable
+                export shipments. Exact requirements are confirmed with our
+                export team for every order.
               </p>
             </div>
           </Reveal>
         </div>
       </section>
 
+      {/* Disclaimer */}
+      <section className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+        <Reveal>
+          <div className="flex items-start gap-3 rounded-2xl border border-gold-500/30 bg-gold-50 px-5 py-4 text-sm text-date-700">
+            <ShieldCheck size={18} className="mt-0.5 shrink-0 text-gold-700" />
+            <p>
+              This page describes export documentation practices, not a list of
+              certifications currently held by the company. Certification
+              documents are available for applicable shipments — specifics are
+              confirmed per order and destination.
+            </p>
+          </div>
+        </Reveal>
+      </section>
+
       {/* Certifications grid */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
         <Reveal>
           <SectionHeading
-            eyebrow="Export certificates"
-            title="What we provide with every shipment"
-            description="All certificates are issued fresh for each export consshipmentment."
+            eyebrow="Export documents"
+            title="Documents commonly required for shipments"
+            description="Whether a document applies to your shipment depends on the destination and the product. Where required, it is arranged as part of the order."
           />
         </Reveal>
 
@@ -205,8 +228,8 @@ export default function CertificationsPage() {
           <Reveal>
             <SectionHeading
               eyebrow="Our process"
-              title="From grove to your warehouse"
-              description="Six steps, zero shortcuts."
+              title="From inquiry to delivery"
+              description="Six steps, confirmed with you for each order."
             />
           </Reveal>
 
@@ -235,27 +258,25 @@ export default function CertificationsPage() {
         <Reveal>
           <div className="rounded-[2rem] bg-gradient-to-br from-date-900 to-date-950 p-8 text-center sm:p-16">
             <h2 className="font-display text-3xl font-semibold text-cream-50 sm:text-4xl">
-              Need certificates before ordering?
+              Questions about documentation?
             </h2>
             <p className="mx-auto mt-4 max-w-lg text-base text-cream-100/70">
-              We&apos;re happy to share sample certificates and lab reports before
-              you commit. Transparency is our standard.
+              Export information — including which documents apply to your
+              destination — is available upon request from our export team.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <Link
                 href="/inquiry"
                 className="inline-flex items-center gap-2 rounded-full bg-gold-500 px-7 py-3.5 text-sm font-semibold text-date-950 transition-colors hover:bg-gold-400"
               >
-                Request samples <ArrowRight size={16} />
+                Contact our export team <ArrowRight size={16} />
               </Link>
-              <a
-                href="https://wa.me/989123456789"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link
+                href="/products"
                 className="inline-flex items-center gap-2 rounded-full border border-cream-50/25 px-7 py-3.5 text-sm font-semibold text-cream-50 transition-colors hover:border-cream-50/60 hover:bg-cream-50/5"
               >
-                Chat on WhatsApp
-              </a>
+                Browse the catalog
+              </Link>
             </div>
           </div>
         </Reveal>

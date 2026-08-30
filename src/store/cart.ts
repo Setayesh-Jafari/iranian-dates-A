@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
+import type { InquiryUnit } from "@/lib/inquiry";
 
 export type InquiryItem = {
   id: number;
@@ -10,6 +11,13 @@ export type InquiryItem = {
   image: string;
   origin: string;
   weight: string;
+  /**
+   * Buyer-provided requested quantity, kept as the raw string from the
+   * input so the form can round-trip it. Optional for backwards
+   * compatibility with previously persisted lists (which had no quantity).
+   */
+  quantity?: string;
+  unit?: InquiryUnit;
 };
 
 type InquiryState = {
@@ -17,6 +25,8 @@ type InquiryState = {
   isOpen: boolean;
   addItem: (item: InquiryItem) => void;
   removeItem: (id: number) => void;
+  /** Patch one inquiry-list entry (currently used for quantity/unit). */
+  updateItem: (id: number, patch: Partial<InquiryItem>) => void;
   clear: () => void;
   openDrawer: () => void;
   closeDrawer: () => void;
@@ -36,6 +46,10 @@ export const useInquiry = create<InquiryState>()(
       removeItem: (id) =>
         set((state) => ({
           items: state.items.filter((i) => i.id !== id),
+        })),
+      updateItem: (id, patch) =>
+        set((state) => ({
+          items: state.items.map((i) => (i.id === id ? { ...i, ...patch } : i)),
         })),
       clear: () => set({ items: [] }),
       openDrawer: () => set({ isOpen: true }),

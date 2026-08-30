@@ -1,0 +1,2 @@
+# Placeholder so the static asset directory exists for builds and the Docker
+# image (COPY of public/). Real, business-verified images will be added here.

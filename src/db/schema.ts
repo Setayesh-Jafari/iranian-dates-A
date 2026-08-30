@@ -9,6 +9,7 @@ import {
   jsonb,
   index,
 } from "drizzle-orm/pg-core";
+import type { StoredInquiryItem } from "@/lib/inquiry";
 
 export const products = pgTable(
   "products",
@@ -67,9 +68,8 @@ export const inquiries = pgTable("inquiries", {
   country: text("country").notNull(),
   city: text("city"),
   message: text("message"),
-  items: jsonb("items")
-    .$type<{ name: string; slug: string; quantity: string }[]>()
-    .notNull(),
+  // jsonb only — annotation change, no physical schema change.
+  items: jsonb("items").$type<StoredInquiryItem[]>().notNull(),
   status: text("status").notNull().default("new"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });

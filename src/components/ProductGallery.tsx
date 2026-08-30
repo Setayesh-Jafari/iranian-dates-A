@@ -6,9 +6,14 @@ import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { EASE } from "@/lib/motion";
 
+// Neutral fallback used only when a product has no images attached.
+// NOTE: placeholder imagery — not verified product photography.
+const FALLBACK_IMAGE =
+  "https://images.pexels.com/photos/15913423/pexels-photo-15913423.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1200&h=900";
+
 export function ProductGallery({ images, name }: { images: string[]; name: string }) {
   const [active, setActive] = useState(0);
-  const imgs = images.length ? images : ["/images/hero.jpg"];
+  const imgs = images.length ? images : [FALLBACK_IMAGE];
 
   return (
     <div className="flex flex-col gap-4">

@@ -1,4 +1,4 @@
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { products, reviews } from "@/db/schema";
 import { eq } from "drizzle-orm";
 
@@ -31,6 +31,8 @@ export async function POST(request: Request) {
   if (!comment || comment.length < 10 || comment.length > 2000) {
     return Response.json({ error: "Review must be between 10 and 2000 characters" }, { status: 400 });
   }
+
+  const db = getDb();
 
   const existing = await db
     .select({ id: products.id })

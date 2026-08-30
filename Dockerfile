@@ -23,15 +23,19 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Copy standalone build
+# Copy standalone build + static assets (public/ exists with a placeholder;
+# real site assets are added by the business later).
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy migration & seed files + install minimal deps for startup
+# DB module + drizzle config + full node_modules are copied ONLY so that an
+# operator can explicitly run maintenance commands inside the container
+# (e.g. `npx drizzle-kit push` when RUN_SCHEMA_PUSH=1). Startup itself never
+# seeds or truncates — see docker-entrypoint.sh.
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
-COPY drizzle.config.json ./
+COPY drizzle.config.ts ./
 COPY src/db ./src/db
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
