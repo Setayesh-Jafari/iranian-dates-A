@@ -5,6 +5,7 @@ import { Check, ClipboardList } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useInquiry } from "@/store/cart";
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export function AddToInquiryButton({
   product,
@@ -13,6 +14,7 @@ export function AddToInquiryButton({
   product: Product;
   className?: string;
 }) {
+  const { dict } = useI18n();
   const addItem = useInquiry((s) => s.addItem);
   const items = useInquiry((s) => s.items);
   const openDrawer = useInquiry((s) => s.openDrawer);
@@ -45,20 +47,20 @@ export function AddToInquiryButton({
         added || alreadyAdded
           ? "bg-gold-500 text-date-950"
           : "bg-date-900 text-cream-50 hover:bg-date-800 hover:shadow-lg",
-        className
+        className,
       )}
     >
       {added ? (
         <>
-          <Check size={16} /> Added to inquiry
+          <Check size={16} /> {dict.common.addedToInquiry}
         </>
       ) : alreadyAdded ? (
         <>
-          <ClipboardList size={16} /> View inquiry list
+          <ClipboardList size={16} /> {dict.common.viewInquiryList}
         </>
       ) : (
         <>
-          <ClipboardList size={16} /> Add to inquiry
+          <ClipboardList size={16} /> {dict.common.addToInquiry}
         </>
       )}
     </button>

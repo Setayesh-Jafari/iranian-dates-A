@@ -5,15 +5,22 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, ClipboardList, X, Trash2 } from "lucide-react";
 import { useInquiry, inquiryCount } from "@/store/cart";
-import { unitLabel } from "@/lib/inquiry";
 import { EASE } from "@/lib/motion";
+import { useI18n } from "@/i18n/I18nProvider";
+import { t, unitLabel } from "@/i18n";
 
 export function CartDrawer() {
+  const { dict, dir, href } = useI18n();
   const items = useInquiry((s) => s.items);
   const isOpen = useInquiry((s) => s.isOpen);
   const closeDrawer = useInquiry((s) => s.closeDrawer);
   const removeItem = useInquiry((s) => s.removeItem);
   const count = inquiryCount(items);
+
+  // The drawer is anchored to the inline-end edge, so it slides in from the
+  // side that is "away" in the current writing direction.
+  const offscreen = dir === "rtl" ? "-100%" : "100%";
+  const flip = dir === "rtl" ? "rotate-180" : undefined;
 
   return (
     <AnimatePresence>
@@ -31,18 +38,18 @@ export function CartDrawer() {
 
           {/* Drawer */}
           <motion.aside
-            initial={{ x: "100%" }}
+            initial={{ x: offscreen }}
             animate={{ x: 0 }}
-            exit={{ x: "100%" }}
+            exit={{ x: offscreen }}
             transition={{ duration: 0.35, ease: EASE }}
-            className="fixed bottom-0 right-0 top-0 z-[80] flex w-full max-w-md flex-col bg-cream-50 shadow-2xl"
+            className="fixed inset-y-0 end-0 z-[80] flex w-full max-w-md flex-col bg-cream-50 shadow-2xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-date-900/10 px-6 py-5">
               <div className="flex items-center gap-3">
                 <ClipboardList size={20} className="text-gold-600" />
                 <h2 className="font-display text-lg font-semibold text-date-900">
-                  Inquiry List
+                  {dict.drawer.title}
                 </h2>
                 {count > 0 && (
                   <span className="grid h-6 min-w-6 place-items-center rounded-full bg-gold-100 px-1.5 text-xs font-bold text-gold-700">
@@ -53,7 +60,7 @@ export function CartDrawer() {
               <button
                 type="button"
                 onClick={closeDrawer}
-                aria-label="Close"
+                aria-label={dict.common.close}
                 className="grid h-10 w-10 place-items-center rounded-full text-date-600 transition-colors hover:bg-date-900/5"
               >
                 <X size={20} />
@@ -67,18 +74,18 @@ export function CartDrawer() {
                   <ClipboardList size={28} strokeWidth={1.5} />
                 </div>
                 <p className="mt-5 font-display text-xl font-semibold text-date-900">
-                  No products selected
+                  {dict.drawer.emptyTitle}
                 </p>
                 <p className="mt-2 max-w-xs text-sm text-date-500">
-                  Browse our catalog and add products you&apos;re interested in.
-                  Then submit an inquiry for a custom quote.
+                  {dict.drawer.emptyText}
                 </p>
                 <Link
-                  href="/products"
+                  href={href("/products")}
                   onClick={closeDrawer}
                   className="mt-6 inline-flex items-center gap-2 rounded-full bg-date-900 px-6 py-3 text-sm font-semibold text-cream-50 transition-colors hover:bg-date-800"
                 >
-                  Browse products <ArrowRight size={16} />
+                  {dict.common.browseProducts}
+                  <ArrowRight size={16} className={flip} />
                 </Link>
               </div>
             ) : (
@@ -99,7 +106,7 @@ export function CartDrawer() {
                         />
                       </div>
                       <div className="flex flex-1 flex-col">
-                        <p className="text-sm font-medium text-date-900 line-clamp-1">
+                        <p className="line-clamp-1 text-sm font-medium text-date-900">
                           {item.name}
                         </p>
                         <p className="text-xs text-date-500">
@@ -107,14 +114,19 @@ export function CartDrawer() {
                         </p>
                         <p className="text-xs text-date-500">
                           {item.quantity && Number(item.quantity) > 0
-                            ? `Quantity: ${item.quantity} ${unitLabel(item.unit)}`
-                            : "Quantity: set on the inquiry form"}
+                            ? t(dict.drawer.quantityValue, {
+                                quantity: item.quantity,
+                                unit: unitLabel(dict, item.unit),
+                              })
+                            : dict.drawer.quantityPending}
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeItem(item.id)}
-                        aria-label={`Remove ${item.name}`}
+                        aria-label={t(dict.drawer.removeItem, {
+                          name: item.name,
+                        })}
                         className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-date-400 transition-colors hover:bg-red-50 hover:text-red-500"
                       >
                         <Trash2 size={16} />
@@ -125,16 +137,16 @@ export function CartDrawer() {
 
                 {/* Footer */}
                 <div className="border-t border-date-900/10 px-6 py-5">
-                  <p className="text-xs text-date-500 mb-4">
-                    Select products and submit your inquiry. Our team will
-                    respond with pricing and current availability.
+                  <p className="mb-4 text-xs text-date-500">
+                    {dict.drawer.footerNote}
                   </p>
                   <Link
-                    href="/inquiry"
+                    href={href("/inquiry")}
                     onClick={closeDrawer}
                     className="flex w-full items-center justify-center gap-2 rounded-full bg-gold-500 py-4 text-sm font-semibold text-date-950 transition-colors hover:bg-gold-400"
                   >
-                    Submit Inquiry <ArrowRight size={16} />
+                    {dict.drawer.submit}
+                    <ArrowRight size={16} className={flip} />
                   </Link>
                 </div>
               </>
