@@ -1,4 +1,4 @@
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { products, reviews } from "@/db/schema";
 import { and, asc, desc, eq, gte, ilike, lte, ne, or, type SQL } from "drizzle-orm";
 import { serializeProduct, serializeReview } from "@/lib/serialize";
@@ -15,6 +15,7 @@ export type ProductFilters = {
 };
 
 export async function getProducts(filters: ProductFilters = {}): Promise<Product[]> {
+  const db = getDb();
   const conditions: SQL[] = [];
 
   if (filters.category) conditions.push(eq(products.category, filters.category));
@@ -55,11 +56,13 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
+  const db = getDb();
   const rows = await db.select().from(products).where(eq(products.slug, slug)).limit(1);
   return rows[0] ? serializeProduct(rows[0]) : null;
 }
 
 export async function getReviewsForProduct(productId: number): Promise<Review[]> {
+  const db = getDb();
   const rows = await db
     .select()
     .from(reviews)
@@ -69,6 +72,7 @@ export async function getReviewsForProduct(productId: number): Promise<Review[]>
 }
 
 export async function getRelatedProducts(product: Product, limit = 4): Promise<Product[]> {
+  const db = getDb();
   const rows = await db
     .select()
     .from(products)
@@ -87,6 +91,7 @@ export async function getRelatedProducts(product: Product, limit = 4): Promise<P
 }
 
 export async function getCategoryFacets(): Promise<Record<string, number>> {
+  const db = getDb();
   const rows = await db.select({ category: products.category }).from(products);
   const counts: Record<string, number> = {};
   for (const row of rows) counts[row.category] = (counts[row.category] ?? 0) + 1;

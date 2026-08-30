@@ -1,7 +1,36 @@
 import "dotenv/config";
-import { db, pool } from "./index";
+import { getDb, getPool } from "./index";
 import { products, reviews } from "./schema";
 import { sql } from "drizzle-orm";
+
+/**
+ * SAFETY GATE — do not remove.
+ *
+ * This script is DESTRUCTIVE: it TRUNCATEs `products`, `reviews` and
+ * `inquiries` (RESTART IDENTITY CASCADE) and reseeds development content.
+ * It must never run automatically on container startup and must never run
+ * against a production database.
+ *
+ * Intended usage (explicit, manual, development only):
+ *   ALLOW_DESTRUCTIVE_SEED=1 npm run db:seed
+ */
+function assertSeedAllowed(): void {
+  if (process.env.NODE_ENV === "production") {
+    console.error(
+      "Refusing to seed: NODE_ENV=production. " +
+        "Seeding truncates all product/review/inquiry data and is for local development only."
+    );
+    process.exit(1);
+  }
+  if (process.env.ALLOW_DESTRUCTIVE_SEED !== "1") {
+    console.error(
+      "Refusing to seed: this script TRUNCATEs products, reviews and inquiries.\n" +
+        "If you really intend to wipe and reseed a DEVELOPMENT database, run it explicitly:\n" +
+        "  ALLOW_DESTRUCTIVE_SEED=1 npm run db:seed"
+    );
+    process.exit(1);
+  }
+}
 
 const px = (id: number) =>
   `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1200&h=900`;
@@ -444,6 +473,9 @@ const PRODUCTS: SeedProduct[] = [
 const REVIEWS: Record<string, SeedReview[]> = {};
 
 async function main() {
+  assertSeedAllowed();
+  const db = getDb();
+  const pool = getPool();
   console.log("Seeding database…");
   await db.execute(sql`TRUNCATE TABLE reviews, inquiries, products RESTART IDENTITY CASCADE`);
 

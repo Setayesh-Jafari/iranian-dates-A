@@ -1,4 +1,4 @@
-import { db } from "@/db";
+import { getDb } from "@/db";
 import { inquiries } from "@/db/schema";
 import { randomUUID } from "node:crypto";
 
@@ -53,6 +53,7 @@ export async function POST(request: Request) {
 
   const inquiryId = `INQ-${randomUUID().slice(0, 8).toUpperCase()}`;
 
+  const db = getDb();
   await db.insert(inquiries).values({
     id: inquiryId,
     name: name.slice(0, 80),
