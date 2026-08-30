@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Product Catalog",
   description:
-    "Browse our full range of export-grade Iranian dates — Mazafati, Piarom, Zahedi and more. Bulk supply for importers and wholesalers worldwide.",
+    "Browse our full range of Iranian dates and date products — Mazafati, Piarom, Zahedi and more. Bulk supply inquiries for importers and wholesalers worldwide.",
 };
 
 function first(v: string | string[] | undefined): string | undefined {
@@ -55,8 +55,9 @@ export default async function ProductsPage({
             {heading}
           </h1>
           <p className="mt-3 max-w-xl text-base text-date-600">
-            Export-grade Iranian dates, graded and cold-chained from the grove.
             Add products to your inquiry list and request a custom quote.
+            Specifications and current availability are provided with every
+            quote.
           </p>
         </div>
       </div>

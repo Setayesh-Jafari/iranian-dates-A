@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
+import { Mail, MapPin, Phone } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { CATEGORIES } from "@/lib/types";
 
@@ -44,8 +44,7 @@ export function Footer() {
               Ready to import?
             </h3>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-cream-100/70">
-              Get in touch for pricing, MOQ and shipping options. Our export
-              team responds within 24 hours.
+              Get in touch for pricing, MOQ and shipping options.
             </p>
             <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
@@ -54,14 +53,6 @@ export function Footer() {
               >
                 Submit an inquiry
               </Link>
-              <a
-                href="https://wa.me/989123456789"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full border border-cream-50/20 px-6 py-3 text-sm font-semibold text-cream-100/80 transition-colors hover:border-cream-50/50 hover:text-cream-50"
-              >
-                <MessageCircle size={16} /> WhatsApp us
-              </a>
             </div>
           </div>
         </div>
@@ -72,19 +63,23 @@ export function Footer() {
           <div className="lg:col-span-5">
             <Logo tone="light" />
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-cream-100/60">
-              Since 2009, Mr.Mazafati has exported single-origin Iranian dates
-              to importers, wholesalers and distributors worldwide — direct from
-              the grove, cold-chained to your port.
+              Mr.Mazafati supplies Iranian dates for export &amp; wholesale —
+              contact our team for product and export information.
             </p>
             <ul className="mt-6 space-y-3 text-sm text-cream-100/70">
               <li className="flex items-center gap-3">
-                <MapPin size={16} className="text-gold-500" /> Tehran, Iran
+                <MapPin size={16} className="text-gold-500" />
+                Iran — exact office address to be published after business
+                verification
               </li>
               <li className="flex items-center gap-3">
-                <Phone size={16} className="text-gold-500" /> +98 912 345 6789
+                <Phone size={16} className="text-gold-500" />
+                Phone / WhatsApp: contact details pending verification
               </li>
               <li className="flex items-center gap-3">
-                <Mail size={16} className="text-gold-500" /> export@mrmazafati.com
+                <Mail size={16} className="text-gold-500" />
+                Email: contact details pending verification — use the
+                inquiry form to reach our team
               </li>
             </ul>
           </div>

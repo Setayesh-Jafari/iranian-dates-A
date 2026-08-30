@@ -48,15 +48,15 @@ export function Header() {
       <div className="relative z-[60] bg-date-950 text-cream-50">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-2.5 px-4 py-2 text-center text-[11px] tracking-wide sm:text-xs">
           <span className="hidden sm:inline text-cream-100/70">
-            Direct from Iranian palm gardens
+            Iranian dates · Export &amp; wholesale
           </span>
           <span className="text-gold-400">✦</span>
           <span className="text-cream-100/90">
-            Export-grade Mazafati &amp; premium varieties
+            Mazafati &amp; premium date products
           </span>
           <span className="hidden text-gold-400 sm:inline">✦</span>
           <span className="hidden font-medium text-gold-300 sm:inline">
-            Bulk orders welcome
+            Bulk inquiries welcome
           </span>
         </div>
       </div>

@@ -93,15 +93,21 @@ export function ReviewsSection({
       {/* Summary + form */}
       <div className="lg:col-span-4">
         <div className="rounded-3xl border border-date-900/10 bg-white p-7">
-          <div className="flex items-end gap-4">
-            <span className="font-display text-6xl font-semibold leading-none text-date-900">
-              {rating.toFixed(1)}
-            </span>
-            <div className="pb-1">
-              <Rating value={rating} size={18} />
-              <p className="mt-1 text-sm text-date-500">{count} verified reviews</p>
+          {count > 0 ? (
+            <div className="flex items-end gap-4">
+              <span className="font-display text-6xl font-semibold leading-none text-date-900">
+                {rating.toFixed(1)}
+              </span>
+              <div className="pb-1">
+                <Rating value={rating} size={18} />
+                <p className="mt-1 text-sm text-date-500">{count} reviews</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <p className="text-sm leading-relaxed text-date-600">
+              No customer reviews published yet.
+            </p>
+          )}
 
           <div className="mt-6 space-y-2.5">
             {distribution.map((d) => (
@@ -217,8 +223,13 @@ export function ReviewsSection({
       {/* Review list */}
       <div className="lg:col-span-8">
         <h3 className="font-display text-xl font-semibold text-date-900">
-          What importers are saying
+          Customer reviews
         </h3>
+        {reviews.length === 0 && (
+          <p className="mt-4 rounded-2xl border border-dashed border-date-900/15 bg-white/50 px-6 py-10 text-center text-sm text-date-500">
+            No customer reviews published yet.
+          </p>
+        )}
         <ul className="mt-5 space-y-5">
           {reviews.map((r) => (
             <li

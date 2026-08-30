@@ -19,13 +19,16 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://mrmazafati.com"),
+  // Set NEXT_PUBLIC_SITE_URL once the business verifies its public domain.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+  ),
   title: {
-    default: "Mr.Mazafati — Premium Iranian Dates · Export & Wholesale",
+    default: "Mr.Mazafati — Iranian Dates · Export & Wholesale",
     template: "%s · Mr.Mazafati",
   },
   description:
-    "Direct exporter of premium Iranian dates — Mazafati, Piarom, Zahedi and more. Bulk supply for importers, wholesalers and distributors worldwide. Cold-chained from Iran.",
+    "Iranian dates export & wholesale — Mazafati, Piarom, Zahedi and more. Bulk supply inquiries from importers, wholesalers and distributors worldwide.",
   keywords: [
     "Iranian dates export",
     "Mazafati dates wholesale",
@@ -35,9 +38,9 @@ export const metadata: Metadata = {
     "bulk dates supplier",
   ],
   openGraph: {
-    title: "Mr.Mazafati — Premium Iranian Dates · Export & Wholesale",
+    title: "Mr.Mazafati — Iranian Dates · Export & Wholesale",
     description:
-      "Direct exporter of premium Iranian dates. Bulk supply for importers worldwide. Cold-chained from the grove.",
+      "Iranian dates for bulk export & wholesale. Request a quote for current availability, specifications and pricing.",
     type: "website",
   },
 };

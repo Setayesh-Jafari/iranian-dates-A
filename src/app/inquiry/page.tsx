@@ -9,7 +9,6 @@ import {
   Check,
   ClipboardList,
   Loader2,
-  MessageCircle,
   ShieldCheck,
   Truck,
 } from "lucide-react";
@@ -113,11 +112,8 @@ export default function InquiryPage() {
           <p className="mt-3 text-sm leading-relaxed text-date-600">
             Your inquiry{" "}
             <span className="font-semibold text-date-900">{inquiryId}</span>{" "}
-            has been received. Our export team will review your requirements and
-            respond with pricing within 24 hours.
-          </p>
-          <p className="mt-4 text-xs text-date-500">
-            A confirmation has been sent to {form.email}
+            has been received. Our export team will review your requirements
+            and get back to you using the contact details you provided.
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -127,14 +123,6 @@ export default function InquiryPage() {
             >
               Continue browsing <ArrowRight size={16} />
             </Link>
-            <a
-              href={`https://wa.me/989123456789?text=${encodeURIComponent(`Hi, I just submitted inquiry ${inquiryId}. Looking forward to your quote.`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-full border border-emerald-600 px-7 py-3.5 text-sm font-semibold text-emerald-700 transition-colors hover:bg-emerald-50"
-            >
-              <MessageCircle size={16} /> Follow up on WhatsApp
-            </a>
           </div>
         </div>
       </div>
@@ -177,8 +165,8 @@ export default function InquiryPage() {
             Request a Quote
           </h1>
           <p className="mt-2 text-sm text-date-500">
-            Fill in your details and our export team will get back to you within
-            24 hours with pricing, MOQ and shipping options.
+            Fill in your details and our export team will get back to you with
+            pricing, MOQ and shipping options.
           </p>
         </div>
         <Link
@@ -301,12 +289,12 @@ export default function InquiryPage() {
               />
               <div className="text-sm text-date-600 leading-relaxed">
                 <p className="font-medium text-date-900">
-                  Flexible payment terms for international buyers
+                  Payment &amp; terms are agreed per order
                 </p>
                 <p className="mt-2">
-                  We accept T/T (bank transfer), Western Union, and other
-                  secure payment methods. Payment terms are discussed on a
-                  per-order basis depending on order volume and relationship.
+                  Payment and delivery terms are discussed with our export
+                  team on a per-order basis, depending on order volume and
+                  destination.
                 </p>
                 <p className="mt-2 text-xs text-date-500">
                   Final pricing depends on quantity, packaging requirements,
@@ -382,7 +370,7 @@ export default function InquiryPage() {
             </button>
 
             <p className="mt-4 text-center text-xs text-date-400">
-              We respond to all inquiries within 24 hours
+              Your inquiry will be reviewed by our export team
             </p>
           </div>
         </aside>

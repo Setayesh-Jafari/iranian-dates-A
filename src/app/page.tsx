@@ -4,11 +4,12 @@ import {
   ArrowRight,
   BadgeCheck,
   Boxes,
+  ClipboardList,
+  FileText,
   FlaskConical,
   Globe,
   Leaf,
-  Snowflake,
-  Star,
+  Send,
   Truck,
 } from "lucide-react";
 import { getProductBySlug, getProducts } from "@/lib/queries";
@@ -16,50 +17,59 @@ import { ProductCard } from "@/components/ProductCard";
 import { AddToInquiryButton } from "@/components/AddToCartButton";
 import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
-import { Rating } from "@/components/Rating";
 import { CATEGORIES } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
+// NOTE (content policy): imagery below is licensed stock photography used as a
+// placeholder. It is NOT verified company/product photography and must not be
+// presented as such until the business provides its own images.
+const px = (id: number) =>
+  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1200&h=900`;
+
 const MARQUEE = [
-  "Single-origin",
-  "Cold-chain shipped",
-  "Lab-tested",
-  "FOB Bandar Abbas",
+  "Premium Iranian dates",
   "Bulk & wholesale",
-  "Direct from the grove",
-  "6 premium varieties",
-  "Export certified",
+  "Mazafati · Piarom · Zahedi",
+  "Request a quote",
+  "Specs on request",
+  "Export inquiries welcome",
+  "Worldwide shipping inquiries",
+  "Pricing on inquiry",
 ];
 
 const COLLECTIONS = [
-  { slug: "premium", image: "/images/mazafati.jpg", note: "Mazafati, Piarom & medjool-style" },
-  { slug: "gifts", image: "/images/gift-box.jpg", note: "Curated boxes & stuffed dates" },
-  { slug: "wholesale", image: "/images/mazafati.jpg", note: "Bulk cartons for importers" },
-  { slug: "products", image: "/images/mazafati.jpg", note: "Syrup, paste, sugar & more" },
-  { slug: "soft", image: "/images/mazafati.jpg", note: "Kabkab, Rabbi & moist picks" },
-  { slug: "dry", image: "/images/mazafati.jpg", note: "Zahedi, Sayer & more" },
+  { slug: "premium", image: px(15913423), note: "Mazafati, Piarom & medjool-style" },
+  { slug: "gifts", image: px(6200512), note: "Curated boxes & stuffed dates" },
+  { slug: "wholesale", image: px(17302469), note: "Bulk cartons for importers" },
+  { slug: "products", image: px(11771949), note: "Syrup, paste, sugar & more" },
+  { slug: "soft", image: px(11679690), note: "Kabkab, Rabbi & moist picks" },
+  { slug: "dry", image: px(15707374), note: "Zahedi, Sayer & more" },
 ];
 
-const TESTIMONIALS = [
+const HOW_IT_WORKS = [
   {
-    quote:
-      "The Kimia-grade Mazafati is the best I've sourced in fifteen years of trading. Cold chain was flawless and my retail customers keep asking for more.",
-    name: "Rohit Malhotra",
-    role: "Owner, Saffron & Co. · Mumbai",
+    icon: ClipboardList,
+    title: "Build an inquiry",
+    text: "Add the products you're evaluating to your inquiry list and submit the form with your destination and volume.",
   },
   {
-    quote:
-      "We supply five-star kitchens across Delhi. The Piarom and stuffed dates arrive pristine every single time. Mr.Mazafati runs a serious operation.",
-    name: "Aman Gupta",
-    role: "Head of Procurement, The Grove Collective · Delhi",
+    icon: FileText,
+    title: "Receive a quote",
+    text: "We respond with current availability, specifications, packing options and pricing for your order.",
   },
   {
-    quote:
-      "The importers' sampler saved me from a costly container decision. Honest grading, transparent pricing and a credit against our first wholesale order.",
-    name: "Kunal Bajaj",
-    role: "Founder, Nourish Foods · Lucknow",
+    icon: Send,
+    title: "Confirm the details",
+    text: "Incoterms, documentation and shipping options are arranged per order and destination.",
   },
+];
+
+const ON_REQUEST_CHIPS = [
+  { icon: Boxes, value: "On request", label: "origin & grading details" },
+  { icon: FlaskConical, value: "On request", label: "product specifications" },
+  { icon: Truck, value: "Per order", label: "shipping & Incoterms" },
+  { icon: Globe, value: String(CATEGORIES.length), label: "collections listed" },
 ];
 
 export default async function HomePage() {
@@ -73,8 +83,8 @@ export default async function HomePage() {
       {/* HERO */}
       <section className="relative -mt-16 min-h-[92vh] w-full overflow-hidden bg-date-950 lg:-mt-[76px]">
         <Image
-          src="/images/hero.jpg"
-          alt="Premium Iranian Mazafati dates in a ceramic bowl"
+          src={px(15913423)}
+          alt="Premium Iranian dates in a bowl (placeholder stock imagery)"
           fill
           priority
           className="object-cover"
@@ -85,7 +95,7 @@ export default async function HomePage() {
         <div className="relative mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center px-4 pt-24 sm:px-6 lg:px-8">
           <div className="max-w-2xl">
             <p className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-gold-400/30 bg-gold-500/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold-300 backdrop-blur">
-              <Leaf size={13} /> B2B Wholesale · Direct Export · Est. 2009
+              <Leaf size={13} /> B2B Wholesale · Export Inquiries Welcome
             </p>
 
             <h1
@@ -93,16 +103,16 @@ export default async function HomePage() {
               style={{ animationDelay: "80ms" }}
             >
               Iranian dates,{" "}
-              <span className="italic text-gold-300">exported direct.</span>
+              <span className="italic text-gold-300">priced on inquiry.</span>
             </h1>
 
             <p
               className="animate-fade-up mt-6 max-w-xl text-base leading-relaxed text-cream-100/80 sm:text-lg"
               style={{ animationDelay: "160ms" }}
             >
-              From the sun-soaked groves of Bam and Hormozgan — we grade,
-              cold-chain and export premium Iranian dates worldwide. Bulk
-              supply for importers, wholesalers and distributors.
+              Premium Iranian dates for importers, wholesalers and
+              distributors. Request a quote for current availability, product
+              specifications and pricing.
             </p>
 
             <div
@@ -128,13 +138,12 @@ export default async function HomePage() {
               style={{ animationDelay: "320ms" }}
             >
               <span className="flex items-center gap-2">
-                <Rating value={4.9} size={15} /> 4.9 rating
+                <BadgeCheck size={16} className="text-gold-400" /> Export information
+                available upon request
               </span>
               <span className="flex items-center gap-2">
-                <BadgeCheck size={16} className="text-gold-400" /> 300+ trade partners
-              </span>
-              <span className="flex items-center gap-2">
-                <Snowflake size={16} className="text-gold-400" /> Cold-chain shipped
+                <BadgeCheck size={16} className="text-gold-400" /> Certification
+                documents available for applicable shipments
               </span>
             </div>
           </div>
@@ -164,7 +173,7 @@ export default async function HomePage() {
             <SectionHeading
               eyebrow="The Collections"
               title="Curated for every market"
-              description="Six collections, one uncompromising standard — from flagship Mazafati to bulk cartons for the trade."
+              description="Six collections — from flagship Mazafati to bulk cartons for the trade."
             />
             <Link
               href="/products"
@@ -218,8 +227,8 @@ export default async function HomePage() {
           <Reveal>
             <div className="relative aspect-[4/5] overflow-hidden rounded-3xl sm:aspect-square">
               <Image
-                src="/images/mazafati.jpg"
-                alt="Signature Mazafati Kimia dates"
+                src={px(15913411)}
+                alt="Mazafati dates (placeholder stock imagery)"
                 fill
                 sizes="(min-width:1024px) 50vw, 100vw"
                 className="object-cover"
@@ -236,13 +245,12 @@ export default async function HomePage() {
                 The Flagship
               </p>
               <h2 className="mt-3 font-display text-4xl font-semibold leading-[1.05] tracking-tight text-cream-50 sm:text-5xl">
-                Mazafati, at its absolute peak.
+                Mazafati, our signature variety.
               </h2>
               <p className="mt-5 max-w-lg text-base leading-relaxed text-cream-100/70">
-                Hand-harvested in the palm gardens of Bam and graded to the
-                exacting Kimia (AAA) standard, our signature date is soft,
-                syrup-rich and melts into caramel. Available in bulk cartons
-                for wholesale and export.
+                Mazafati is a classic soft Iranian date variety, offered for
+                wholesale and export. Grade, size and packing specifications
+                are available upon request.
               </p>
 
               {flagship && (
@@ -287,7 +295,7 @@ export default async function HomePage() {
             <SectionHeading
               eyebrow="Export range"
               title="Our product catalog"
-              description="Premium varieties trusted by importers across India, the Gulf and beyond."
+              description="Varieties and date products available for bulk and wholesale inquiries."
             />
             <Link
               href="/products"
@@ -311,24 +319,14 @@ export default async function HomePage() {
       <section id="story" className="bg-date-950 text-cream-50">
         <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-2 lg:gap-20 lg:px-8">
           <Reveal>
-            <div className="relative">
-              <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
-                <Image
-                  src="/images/story.jpg"
-                  alt="Iranian date palm grove at golden hour"
-                  fill
-                  sizes="(min-width:1024px) 50vw, 100vw"
-                  className="object-cover"
-                />
-              </div>
-              <div className="absolute -bottom-6 -right-4 hidden rounded-2xl border border-gold-500/20 bg-date-900/90 px-6 py-5 shadow-2xl backdrop-blur sm:block">
-                <p className="font-display text-3xl font-semibold text-gold-300">
-                  16+
-                </p>
-                <p className="mt-1 text-xs uppercase tracking-[0.18em] text-cream-100/60">
-                  years exporting
-                </p>
-              </div>
+            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
+              <Image
+                src={px(20106286)}
+                alt="Date palms at golden hour (placeholder stock imagery)"
+                fill
+                sizes="(min-width:1024px) 50vw, 100vw"
+                className="object-cover"
+              />
             </div>
           </Reveal>
 
@@ -336,18 +334,13 @@ export default async function HomePage() {
             <div>
               <SectionHeading
                 tone="light"
-                eyebrow="From the grove"
-                title="A family of growers, a promise of quality"
-                description="Mr.Mazafati began with a single farm in Bam and a simple belief: international importers deserve dates that arrive exactly as they left the palm. Today we work with a network of grower families across Kerman, Hormozgan and Bushehr — every carton graded, lab-tested and cold-chained for export."
+                eyebrow="About us"
+                title="Iranian dates, supplied for export"
+                description="Mr.Mazafati supplies Iranian dates to importers, wholesalers and distributors. Company background, sourcing details and capacity are available upon request from our export team."
               />
 
               <div className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4">
-                {[
-                  { icon: Boxes, value: "40,000+", label: "kg exported yearly" },
-                  { icon: Star, value: "4.9", label: "average rating" },
-                  { icon: Truck, value: "300+", label: "trade partners" },
-                  { icon: Globe, value: "6", label: "signature varieties" },
-                ].map((s) => (
+                {ON_REQUEST_CHIPS.map((s) => (
                   <div key={s.label}>
                     <s.icon size={20} className="text-gold-400" />
                     <p className="mt-3 font-display text-2xl font-semibold text-cream-50">
@@ -364,51 +357,36 @@ export default async function HomePage() {
                 href="/inquiry"
                 className="mt-10 inline-flex items-center gap-2 rounded-full border border-gold-500/40 px-6 py-3 text-sm font-semibold text-gold-300 transition-colors hover:bg-gold-500/10"
               >
-                Become a trade partner <ArrowRight size={16} />
+                Contact our export team <ArrowRight size={16} />
               </Link>
             </div>
           </Reveal>
         </div>
       </section>
 
-      {/* TESTIMONIALS */}
+      {/* HOW IT WORKS */}
       <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
         <Reveal>
           <SectionHeading
             align="center"
-            eyebrow="Trusted by the trade"
-            title="What importers are saying"
+            eyebrow="Working with us"
+            title="How an order comes together"
           />
         </Reveal>
         <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {TESTIMONIALS.map((t, i) => (
-            <Reveal key={t.name} delay={i * 0.08}>
-              <figure className="flex h-full flex-col rounded-3xl border border-date-900/10 bg-white p-7">
-                <div className="flex gap-0.5 text-gold-500">
-                  {Array.from({ length: 5 }).map((_, j) => (
-                    <Star
-                      key={j}
-                      size={16}
-                      className="fill-current"
-                      strokeWidth={0}
-                    />
-                  ))}
+          {HOW_IT_WORKS.map((t, i) => (
+            <Reveal key={t.title} delay={i * 0.08}>
+              <div className="flex h-full flex-col rounded-3xl border border-date-900/10 bg-white p-7">
+                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gold-100">
+                  <t.icon size={20} className="text-gold-700" />
                 </div>
-                <blockquote className="mt-4 flex-1 text-sm leading-relaxed text-date-700">
-                  &ldquo;{t.quote}&rdquo;
-                </blockquote>
-                <figcaption className="mt-6 flex items-center gap-3 border-t border-date-900/10 pt-5">
-                  <span className="grid h-10 w-10 place-items-center rounded-full bg-gold-100 font-display text-base font-semibold text-date-800">
-                    {t.name.charAt(0)}
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-date-900">
-                      {t.name}
-                    </p>
-                    <p className="text-xs text-date-500">{t.role}</p>
-                  </div>
-                </figcaption>
-              </figure>
+                <h3 className="mt-5 font-display text-lg font-semibold text-date-900">
+                  {t.title}
+                </h3>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-date-600">
+                  {t.text}
+                </p>
+              </div>
             </Reveal>
           ))}
         </div>
