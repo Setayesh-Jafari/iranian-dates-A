@@ -13,12 +13,14 @@ import {
   Truck,
 } from "lucide-react";
 import { useInquiry } from "@/store/cart";
+import {
+  INQUIRY_COUNTRIES,
+  MAX_MESSAGE_LENGTH,
+  QUANTITY_UNITS,
+  type InquiryUnit,
+} from "@/lib/inquiry";
 
-const COUNTRIES = [
-  "India", "United Arab Emirates", "Saudi Arabia", "Iraq", "Pakistan",
-  "Bangladesh", "Sri Lanka", "Turkey", "Russia", "Germany",
-  "United Kingdom", "United States", "Canada", "Australia", "Other",
-];
+const COUNTRIES = INQUIRY_COUNTRIES;
 
 const inputClass =
   "mt-1.5 w-full rounded-xl border border-date-900/12 bg-cream-50 px-3.5 py-2.5 text-sm text-date-900 placeholder:text-date-400 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20";
@@ -44,8 +46,16 @@ function Field({
   );
 }
 
+/** Client-side convenience check; the server validates again authoritatively. */
+function isValidQuantity(value: string | undefined): boolean {
+  if (!value || value.trim() === "") return false;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0;
+}
+
 export default function InquiryPage() {
   const items = useInquiry((s) => s.items);
+  const updateItem = useInquiry((s) => s.updateItem);
   const clear = useInquiry((s) => s.clear);
   const [status, setStatus] = useState<"form" | "submitting" | "submitted">("form");
   const [inquiryId, setInquiryId] = useState("");
@@ -59,6 +69,9 @@ export default function InquiryPage() {
     city: "",
     message: "",
   });
+  // Honeypot — visually hidden and never filled by real users. Bots that
+  // auto-populate it get rejected server-side (no lead is stored).
+  const [hp, setHp] = useState("");
 
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -66,8 +79,15 @@ export default function InquiryPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (status !== "form") return; // double-submission guard
     if (items.length === 0) {
       setError("Please add at least one product to your inquiry list.");
+      return;
+    }
+    if (items.some((i) => !isValidQuantity(i.quantity))) {
+      setError(
+        "Please enter a requested quantity (a number greater than zero) for every product in your inquiry list."
+      );
       return;
     }
     setStatus("submitting");
@@ -78,21 +98,26 @@ export default function InquiryPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: items.map((i) => ({
-            name: i.name,
             slug: i.slug,
-            quantity: "TBD",
+            quantity: Number(i.quantity),
+            unit: i.unit ?? "kg",
           })),
           customer: form,
+          _hp: hp,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Something went wrong");
-      setInquiryId(data.inquiryId);
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        inquiryId?: string;
+      };
+      if (!res.ok)
+        throw new Error(data.error || "Something went wrong — please try again.");
+      setInquiryId(data.inquiryId ?? "");
       setStatus("submitted");
       clear();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Something went wrong"
+        err instanceof Error ? err.message : "Something went wrong — please try again."
       );
       setStatus("form");
     }
@@ -112,8 +137,8 @@ export default function InquiryPage() {
           <p className="mt-3 text-sm leading-relaxed text-date-600">
             Your inquiry{" "}
             <span className="font-semibold text-date-900">{inquiryId}</span>{" "}
-            has been received. Our export team will review your requirements
-            and get back to you using the contact details you provided.
+            has been received and recorded. Please keep your reference number
+            for any follow-up.
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -181,6 +206,17 @@ export default function InquiryPage() {
         onSubmit={submit}
         className="grid gap-10 lg:grid-cols-[1fr_400px] lg:items-start"
       >
+        {/* Anti-spam honeypot: real users never see or fill this field. */}
+        <input
+          type="text"
+          name="_hp"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          value={hp}
+          onChange={(e) => setHp(e.target.value)}
+          className="pointer-events-none absolute -left-[9999px] top-auto h-px w-px overflow-hidden opacity-0"
+        />
         {/* Form fields */}
         <div className="space-y-8">
           <section className="rounded-3xl border border-date-900/10 bg-white p-6 sm:p-8">
@@ -197,15 +233,16 @@ export default function InquiryPage() {
                   className={inputClass}
                 />
               </Field>
-              <Field label="Company">
+              <Field label="Company name" required>
                 <input
+                  required
                   value={form.company}
                   onChange={(e) => set("company", e.target.value)}
                   placeholder="Your company name"
                   className={inputClass}
                 />
               </Field>
-              <Field label="Email" required>
+              <Field label="Business email" required>
                 <input
                   type="email"
                   required
@@ -250,11 +287,12 @@ export default function InquiryPage() {
                   ))}
                 </select>
               </Field>
-              <Field label="City">
+              <Field label="Destination city / port">
                 <input
                   value={form.city}
                   onChange={(e) => set("city", e.target.value)}
-                  placeholder="Mumbai"
+                  placeholder="Where should the shipment go?"
+                  maxLength={120}
                   className={inputClass}
                 />
               </Field>
@@ -266,12 +304,13 @@ export default function InquiryPage() {
               Additional requirements
             </h2>
             <div className="mt-5">
-              <Field label="Message">
+              <Field label="Message / Requirements">
                 <textarea
                   rows={4}
                   value={form.message}
                   onChange={(e) => set("message", e.target.value)}
-                  placeholder="Required quantity, preferred packaging, delivery timeline, any special requirements..."
+                  maxLength={MAX_MESSAGE_LENGTH}
+                  placeholder="Packaging preferences, documentation needs, quality expectations, delivery timeline — anything we should know (optional)."
                   className={`${inputClass} resize-none`}
                 />
               </Field>
@@ -311,9 +350,12 @@ export default function InquiryPage() {
             <h2 className="font-display text-lg font-semibold text-date-900">
               Selected products
             </h2>
-            <ul className="mt-4 space-y-3">
+            <p className="mt-1 text-xs text-date-500">
+              Quantity / Volume — tell us how much you need per product.
+            </p>
+            <ul className="mt-4 space-y-4">
               {items.map((i) => (
-                <li key={i.id} className="flex items-center gap-3">
+                <li key={i.id} className="flex items-start gap-3">
                   <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-lg bg-cream-200">
                     <Image
                       src={i.image}
@@ -327,6 +369,37 @@ export default function InquiryPage() {
                     <p className="text-sm font-medium text-date-900 truncate">
                       {i.name}
                     </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min="1"
+                        step="any"
+                        aria-label={`Quantity for ${i.name}`}
+                        placeholder="Quantity"
+                        value={i.quantity ?? ""}
+                        onChange={(e) =>
+                          updateItem(i.id, { quantity: e.target.value })
+                        }
+                        className="w-24 rounded-lg border border-date-900/12 bg-cream-50 px-2.5 py-1.5 text-sm text-date-900 placeholder:text-date-400 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20"
+                      />
+                      <select
+                        aria-label={`Unit for ${i.name}`}
+                        value={i.unit ?? "kg"}
+                        onChange={(e) =>
+                          updateItem(i.id, {
+                            unit: e.target.value as InquiryUnit,
+                          })
+                        }
+                        className="rounded-lg border border-date-900/12 bg-cream-50 px-2 py-1.5 text-sm text-date-900 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20"
+                      >
+                        {QUANTITY_UNITS.map((u) => (
+                          <option key={u.value} value={u.value}>
+                            {u.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     <p className="text-xs text-date-500">
                       {i.weight} · {i.origin}
                     </p>

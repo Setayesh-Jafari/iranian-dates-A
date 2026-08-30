@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { ArrowRight, ClipboardList, X, Trash2 } from "lucide-react";
 import { useInquiry, inquiryCount } from "@/store/cart";
+import { unitLabel } from "@/lib/inquiry";
 import { EASE } from "@/lib/motion";
 
 export function CartDrawer() {
@@ -103,6 +104,11 @@ export function CartDrawer() {
                         </p>
                         <p className="text-xs text-date-500">
                           {item.weight} · {item.origin}
+                        </p>
+                        <p className="text-xs text-date-500">
+                          {item.quantity && Number(item.quantity) > 0
+                            ? `Quantity: ${item.quantity} ${unitLabel(item.unit)}`
+                            : "Quantity: set on the inquiry form"}
                         </p>
                       </div>
                       <button
