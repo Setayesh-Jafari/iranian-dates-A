@@ -7,7 +7,8 @@ import { Check, ClipboardList } from "lucide-react";
 import type { Product } from "@/lib/types";
 import { useInquiry } from "@/store/cart";
 import { cn } from "@/lib/utils";
-import { categoryLabel } from "@/lib/types";
+import { useI18n } from "@/i18n/I18nProvider";
+import { categoryLabel, t } from "@/i18n";
 
 export function ProductCard({
   product,
@@ -16,11 +17,12 @@ export function ProductCard({
   product: Product;
   priority?: boolean;
 }) {
+  const { dict, href } = useI18n();
   const addItem = useInquiry((s) => s.addItem);
   const openDrawer = useInquiry((s) => s.openDrawer);
   const [added, setAdded] = useState(false);
   const alreadyAdded = useInquiry((s) =>
-    s.items.some((i) => i.id === product.id)
+    s.items.some((i) => i.id === product.id),
   );
 
   function handleAdd(e: React.MouseEvent<HTMLButtonElement>) {
@@ -44,7 +46,7 @@ export function ProductCard({
 
   return (
     <Link
-      href={`/products/${product.slug}`}
+      href={href(`/products/${product.slug}`)}
       className="group relative flex flex-col focus-visible:outline-none"
     >
       <div className="relative aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-cream-200 shadow-[inset_0_0_0_1px_rgba(23,14,6,0.05)]">
@@ -57,7 +59,7 @@ export function ProductCard({
           priority={priority}
         />
 
-        <div className="absolute left-3 top-3 flex flex-col gap-1.5">
+        <div className="absolute start-3 top-3 flex flex-col gap-1.5">
           {product.badge && (
             <span className="rounded-full bg-gold-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-date-950 shadow-sm">
               {product.badge}
@@ -68,12 +70,12 @@ export function ProductCard({
         <button
           type="button"
           onClick={handleAdd}
-          aria-label={`Add ${product.name} to inquiry`}
+          aria-label={t(dict.common.addToInquiryAria, { name: product.name })}
           className={cn(
-            "absolute bottom-3 right-3 grid h-11 w-11 place-items-center rounded-full shadow-lg transition-all duration-300",
+            "absolute bottom-3 end-3 grid h-11 w-11 place-items-center rounded-full shadow-lg transition-all duration-300",
             added || alreadyAdded
               ? "bg-gold-500 text-date-950"
-              : "bg-cream-50 text-date-900 hover:bg-date-900 hover:text-cream-50"
+              : "bg-cream-50 text-date-900 hover:bg-date-900 hover:text-cream-50",
           )}
         >
           {added || alreadyAdded ? (
@@ -86,18 +88,18 @@ export function ProductCard({
 
       <div className="flex flex-1 flex-col pt-4">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-600">
-          {categoryLabel(product.category)}
+          {categoryLabel(dict, product.category)}
         </p>
         <h3 className="mt-1.5 font-display text-lg font-semibold leading-snug text-date-900 transition-colors group-hover:text-gold-700">
           {product.name}
         </h3>
         <p className="mt-1 text-xs text-date-500">{product.origin}</p>
-        <p className="mt-2 text-sm text-date-600 line-clamp-2">
+        <p className="mt-2 line-clamp-2 text-sm text-date-600">
           {product.tagline}
         </p>
         <div className="mt-3">
           <span className="inline-flex items-center gap-1.5 rounded-full border border-date-900/10 bg-cream-100 px-3 py-1.5 text-xs font-medium text-date-700 transition-colors group-hover:border-gold-500/30 group-hover:bg-gold-50">
-            <ClipboardList size={12} /> Request pricing
+            <ClipboardList size={12} /> {dict.common.requestPricing}
           </span>
         </div>
       </div>

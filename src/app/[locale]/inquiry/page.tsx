@@ -19,6 +19,8 @@ import {
   QUANTITY_UNITS,
   type InquiryUnit,
 } from "@/lib/inquiry";
+import { useI18n } from "@/i18n/I18nProvider";
+import { countryLabel, t, unitLabel } from "@/i18n";
 
 const COUNTRIES = INQUIRY_COUNTRIES;
 
@@ -54,10 +56,13 @@ function isValidQuantity(value: string | undefined): boolean {
 }
 
 export default function InquiryPage() {
+  const { dict, dir, href } = useI18n();
   const items = useInquiry((s) => s.items);
   const updateItem = useInquiry((s) => s.updateItem);
   const clear = useInquiry((s) => s.clear);
-  const [status, setStatus] = useState<"form" | "submitting" | "submitted">("form");
+  const [status, setStatus] = useState<"form" | "submitting" | "submitted">(
+    "form",
+  );
   const [inquiryId, setInquiryId] = useState("");
   const [error, setError] = useState("");
   const [form, setForm] = useState({
@@ -73,6 +78,10 @@ export default function InquiryPage() {
   // auto-populate it get rejected server-side (no lead is stored).
   const [hp, setHp] = useState("");
 
+  const flip = dir === "rtl" ? "rotate-180" : undefined;
+  const noun =
+    items.length === 1 ? dict.common.productOne : dict.common.productMany;
+
   function set<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
   }
@@ -81,13 +90,11 @@ export default function InquiryPage() {
     e.preventDefault();
     if (status !== "form") return; // double-submission guard
     if (items.length === 0) {
-      setError("Please add at least one product to your inquiry list.");
+      setError(dict.inquiry.errorEmptyList);
       return;
     }
     if (items.some((i) => !isValidQuantity(i.quantity))) {
-      setError(
-        "Please enter a requested quantity (a number greater than zero) for every product in your inquiry list."
-      );
+      setError(dict.inquiry.errorQuantity);
       return;
     }
     setStatus("submitting");
@@ -111,13 +118,13 @@ export default function InquiryPage() {
         inquiryId?: string;
       };
       if (!res.ok)
-        throw new Error(data.error || "Something went wrong — please try again.");
+        throw new Error(data.error || dict.inquiry.errorGeneric);
       setInquiryId(data.inquiryId ?? "");
       setStatus("submitted");
       clear();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Something went wrong — please try again."
+        err instanceof Error ? err.message : dict.inquiry.errorGeneric,
       );
       setStatus("form");
     }
@@ -132,21 +139,19 @@ export default function InquiryPage() {
             <Check size={30} strokeWidth={2.5} />
           </div>
           <h1 className="mt-6 font-display text-3xl font-semibold text-date-900">
-            Inquiry submitted!
+            {dict.inquiry.successTitle}
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-date-600">
-            Your inquiry{" "}
-            <span className="font-semibold text-date-900">{inquiryId}</span>{" "}
-            has been received and recorded. Please keep your reference number
-            for any follow-up.
+            {t(dict.inquiry.successBody, { id: inquiryId })}
           </p>
 
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <Link
-              href="/products"
+              href={href("/products")}
               className="inline-flex items-center gap-2 rounded-full bg-date-900 px-7 py-3.5 text-sm font-semibold text-cream-50 transition-colors hover:bg-date-800"
             >
-              Continue browsing <ArrowRight size={16} />
+              {dict.common.continueBrowsing}
+              <ArrowRight size={16} className={flip} />
             </Link>
           </div>
         </div>
@@ -162,17 +167,15 @@ export default function InquiryPage() {
           <ClipboardList size={28} strokeWidth={1.5} />
         </div>
         <h1 className="mt-6 font-display text-3xl font-semibold text-date-900">
-          Your inquiry list is empty
+          {dict.inquiry.emptyTitle}
         </h1>
-        <p className="mt-3 text-sm text-date-600">
-          Browse our catalog and add products you&apos;re interested in. Then come
-          back here to submit your inquiry for a custom quote.
-        </p>
+        <p className="mt-3 text-sm text-date-600">{dict.inquiry.emptyText}</p>
         <Link
-          href="/products"
+          href={href("/products")}
           className="mt-8 inline-flex items-center gap-2 rounded-full bg-date-900 px-7 py-3.5 text-sm font-semibold text-cream-50 transition-colors hover:bg-date-800"
         >
-          Browse products <ArrowRight size={16} />
+          {dict.common.browseProducts}
+          <ArrowRight size={16} className={flip} />
         </Link>
       </div>
     );
@@ -184,21 +187,19 @@ export default function InquiryPage() {
       <div className="mb-8 flex items-center justify-between">
         <div>
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-gold-600">
-            <ClipboardList size={13} /> Wholesale inquiry
+            <ClipboardList size={13} /> {dict.inquiry.eyebrow}
           </p>
           <h1 className="mt-2 font-display text-3xl font-semibold text-date-900 sm:text-4xl">
-            Request a Quote
+            {dict.inquiry.title}
           </h1>
-          <p className="mt-2 text-sm text-date-500">
-            Fill in your details and our export team will get back to you with
-            pricing, MOQ and shipping options.
-          </p>
+          <p className="mt-2 text-sm text-date-500">{dict.inquiry.subtitle}</p>
         </div>
         <Link
-          href="/products"
+          href={href("/products")}
           className="inline-flex items-center gap-2 text-sm font-medium text-date-600 transition-colors hover:text-date-900"
         >
-          <ArrowLeft size={16} /> Continue browsing
+          <ArrowLeft size={16} className={flip} />
+          {dict.inquiry.continueBrowsing}
         </Link>
       </div>
 
@@ -221,44 +222,44 @@ export default function InquiryPage() {
         <div className="space-y-8">
           <section className="rounded-3xl border border-date-900/10 bg-white p-6 sm:p-8">
             <h2 className="font-display text-lg font-semibold text-date-900">
-              Contact details
+              {dict.inquiry.contactDetails}
             </h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <Field label="Full name" required>
+              <Field label={dict.inquiry.fullName} required>
                 <input
                   required
                   value={form.name}
                   onChange={(e) => set("name", e.target.value)}
-                  placeholder="John Smith"
+                  placeholder={dict.inquiry.fullNamePlaceholder}
                   className={inputClass}
                 />
               </Field>
-              <Field label="Company name" required>
+              <Field label={dict.inquiry.companyName} required>
                 <input
                   required
                   value={form.company}
                   onChange={(e) => set("company", e.target.value)}
-                  placeholder="Your company name"
+                  placeholder={dict.inquiry.companyNamePlaceholder}
                   className={inputClass}
                 />
               </Field>
-              <Field label="Business email" required>
+              <Field label={dict.inquiry.businessEmail} required>
                 <input
                   type="email"
                   required
                   value={form.email}
                   onChange={(e) => set("email", e.target.value)}
-                  placeholder="you@company.com"
+                  placeholder={dict.inquiry.businessEmailPlaceholder}
                   className={inputClass}
                 />
               </Field>
-              <Field label="Phone / WhatsApp" required>
+              <Field label={dict.inquiry.phone} required>
                 <input
                   type="tel"
                   required
                   value={form.phone}
                   onChange={(e) => set("phone", e.target.value)}
-                  placeholder="+91 98XXX XXXXX"
+                  placeholder={dict.inquiry.phonePlaceholder}
                   className={inputClass}
                 />
               </Field>
@@ -267,10 +268,10 @@ export default function InquiryPage() {
 
           <section className="rounded-3xl border border-date-900/10 bg-white p-6 sm:p-8">
             <h2 className="font-display text-lg font-semibold text-date-900">
-              Shipping destination
+              {dict.inquiry.shippingDestination}
             </h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              <Field label="Country" required>
+              <Field label={dict.inquiry.country} required>
                 <select
                   required
                   value={form.country}
@@ -278,20 +279,20 @@ export default function InquiryPage() {
                   className={inputClass}
                 >
                   <option value="" disabled>
-                    Select country
+                    {dict.inquiry.selectCountry}
                   </option>
                   {COUNTRIES.map((c) => (
                     <option key={c} value={c}>
-                      {c}
+                      {countryLabel(dict, c)}
                     </option>
                   ))}
                 </select>
               </Field>
-              <Field label="Destination city / port">
+              <Field label={dict.inquiry.city}>
                 <input
                   value={form.city}
                   onChange={(e) => set("city", e.target.value)}
-                  placeholder="Where should the shipment go?"
+                  placeholder={dict.inquiry.cityPlaceholder}
                   maxLength={120}
                   className={inputClass}
                 />
@@ -301,16 +302,16 @@ export default function InquiryPage() {
 
           <section className="rounded-3xl border border-date-900/10 bg-white p-6 sm:p-8">
             <h2 className="font-display text-lg font-semibold text-date-900">
-              Additional requirements
+              {dict.inquiry.additionalRequirements}
             </h2>
             <div className="mt-5">
-              <Field label="Message / Requirements">
+              <Field label={dict.inquiry.message}>
                 <textarea
                   rows={4}
                   value={form.message}
                   onChange={(e) => set("message", e.target.value)}
                   maxLength={MAX_MESSAGE_LENGTH}
-                  placeholder="Packaging preferences, documentation needs, quality expectations, delivery timeline — anything we should know (optional)."
+                  placeholder={dict.inquiry.messagePlaceholder}
                   className={`${inputClass} resize-none`}
                 />
               </Field>
@@ -319,25 +320,20 @@ export default function InquiryPage() {
 
           <section className="rounded-3xl border border-date-900/10 bg-white p-6 sm:p-8">
             <h2 className="font-display text-lg font-semibold text-date-900">
-              Payment & terms
+              {dict.inquiry.paymentTerms}
             </h2>
             <div className="mt-5 flex items-start gap-3 rounded-2xl bg-cream-100 p-5">
               <ShieldCheck
                 size={20}
                 className="mt-0.5 shrink-0 text-gold-600"
               />
-              <div className="text-sm text-date-600 leading-relaxed">
+              <div className="text-sm leading-relaxed text-date-600">
                 <p className="font-medium text-date-900">
-                  Payment &amp; terms are agreed per order
+                  {dict.inquiry.termsTitle}
                 </p>
-                <p className="mt-2">
-                  Payment and delivery terms are discussed with our export
-                  team on a per-order basis, depending on order volume and
-                  destination.
-                </p>
+                <p className="mt-2">{dict.inquiry.termsBody1}</p>
                 <p className="mt-2 text-xs text-date-500">
-                  Final pricing depends on quantity, packaging requirements,
-                  and destination. We&apos;ll include all details in our quote.
+                  {dict.inquiry.termsBody2}
                 </p>
               </div>
             </div>
@@ -348,10 +344,10 @@ export default function InquiryPage() {
         <aside className="lg:sticky lg:top-24">
           <div className="rounded-3xl border border-date-900/10 bg-white p-6">
             <h2 className="font-display text-lg font-semibold text-date-900">
-              Selected products
+              {dict.inquiry.selectedProducts}
             </h2>
             <p className="mt-1 text-xs text-date-500">
-              Quantity / Volume — tell us how much you need per product.
+              {dict.inquiry.quantityHint}
             </p>
             <ul className="mt-4 space-y-4">
               {items.map((i) => (
@@ -365,8 +361,8 @@ export default function InquiryPage() {
                       className="object-cover"
                     />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-date-900 truncate">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-date-900">
                       {i.name}
                     </p>
                     <div className="mt-2 flex items-center gap-2">
@@ -375,8 +371,10 @@ export default function InquiryPage() {
                         inputMode="decimal"
                         min="1"
                         step="any"
-                        aria-label={`Quantity for ${i.name}`}
-                        placeholder="Quantity"
+                        aria-label={t(dict.inquiry.quantityAria, {
+                          name: i.name,
+                        })}
+                        placeholder={dict.inquiry.quantityPlaceholder}
                         value={i.quantity ?? ""}
                         onChange={(e) =>
                           updateItem(i.id, { quantity: e.target.value })
@@ -384,7 +382,7 @@ export default function InquiryPage() {
                         className="w-24 rounded-lg border border-date-900/12 bg-cream-50 px-2.5 py-1.5 text-sm text-date-900 placeholder:text-date-400 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20"
                       />
                       <select
-                        aria-label={`Unit for ${i.name}`}
+                        aria-label={t(dict.inquiry.unitAria, { name: i.name })}
                         value={i.unit ?? "kg"}
                         onChange={(e) =>
                           updateItem(i.id, {
@@ -395,7 +393,7 @@ export default function InquiryPage() {
                       >
                         {QUANTITY_UNITS.map((u) => (
                           <option key={u.value} value={u.value}>
-                            {u.label}
+                            {unitLabel(dict, u.value)}
                           </option>
                         ))}
                       </select>
@@ -411,10 +409,7 @@ export default function InquiryPage() {
             <div className="mt-5 border-t border-date-900/10 pt-5">
               <div className="flex items-center gap-2 rounded-2xl bg-gold-50 p-4 text-sm text-gold-800">
                 <Truck size={16} className="shrink-0" />
-                <span>
-                  Pricing will be provided based on your required quantity and
-                  destination.
-                </span>
+                <span>{dict.inquiry.pricingNote}</span>
               </div>
             </div>
 
@@ -431,19 +426,16 @@ export default function InquiryPage() {
             >
               {status === "submitting" ? (
                 <>
-                  <Loader2 size={16} className="animate-spin" /> Sending
-                  inquiry…
+                  <Loader2 size={16} className="animate-spin" />
+                  {dict.inquiry.submitting}
                 </>
               ) : (
-                <>
-                  Submit inquiry · {items.length} product
-                  {items.length !== 1 ? "s" : ""}
-                </>
+                t(dict.inquiry.submit, { count: items.length, noun })
               )}
             </button>
 
             <p className="mt-4 text-center text-xs text-date-400">
-              Your inquiry will be reviewed by our export team
+              {dict.inquiry.reviewNote}
             </p>
           </div>
         </aside>

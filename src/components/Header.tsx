@@ -6,23 +6,20 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { ClipboardList, Menu, X } from "lucide-react";
 import { Logo } from "@/components/Logo";
+import { LocaleSwitcher } from "@/components/LocaleSwitcher";
 import { cn } from "@/lib/utils";
 import { useInquiry, inquiryCount } from "@/store/cart";
 import { useMounted } from "@/lib/useMounted";
 import { CATEGORIES } from "@/lib/types";
 import { EASE } from "@/lib/motion";
-
-const NAV = [
-  { label: "Products", href: "/products" },
-  { label: "Premium", href: "/products?category=premium" },
-  { label: "Wholesale", href: "/products?category=wholesale" },
-  { label: "Certifications", href: "/certifications" },
-  { label: "Our Story", href: "/#story" },
-];
+import { useI18n } from "@/i18n/I18nProvider";
+import { categoryLabel, categoryShort } from "@/i18n";
+import { stripLocale } from "@/i18n/config";
 
 export function Header() {
+  const { dict, href } = useI18n();
   const pathname = usePathname();
-  const isHome = pathname === "/";
+  const isHome = stripLocale(pathname) === "/";
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const items = useInquiry((s) => s.items);
@@ -43,20 +40,26 @@ export function Header() {
 
   const solid = scrolled || !isHome || menuOpen;
 
+  const NAV = [
+    { label: dict.nav.products, href: href("/products") },
+    { label: dict.nav.premium, href: href("/products?category=premium") },
+    { label: dict.nav.wholesale, href: href("/products?category=wholesale") },
+    { label: dict.nav.certifications, href: href("/certifications") },
+    { label: dict.nav.story, href: href("/#story") },
+  ];
+
   return (
     <>
       <div className="relative z-[60] bg-date-950 text-cream-50">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-2.5 px-4 py-2 text-center text-[11px] tracking-wide sm:text-xs">
-          <span className="hidden sm:inline text-cream-100/70">
-            Iranian dates · Export &amp; wholesale
+          <span className="hidden text-cream-100/70 sm:inline">
+            {dict.nav.announcement1}
           </span>
           <span className="text-gold-400">✦</span>
-          <span className="text-cream-100/90">
-            Mazafati &amp; premium date products
-          </span>
+          <span className="text-cream-100/90">{dict.nav.announcement2}</span>
           <span className="hidden text-gold-400 sm:inline">✦</span>
           <span className="hidden font-medium text-gold-300 sm:inline">
-            Bulk inquiries welcome
+            {dict.nav.announcement3}
           </span>
         </div>
       </div>
@@ -66,7 +69,7 @@ export function Header() {
           "sticky top-0 z-50 transition-all duration-300",
           solid
             ? "border-b border-date-900/10 bg-cream-50/90 shadow-[0_1px_0_0_rgba(23,14,6,0.03)] backdrop-blur-xl"
-            : "border-b border-transparent bg-transparent"
+            : "border-b border-transparent bg-transparent",
         )}
       >
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-[76px] lg:px-8">
@@ -81,14 +84,14 @@ export function Header() {
                   "group relative text-sm font-medium tracking-wide transition-colors",
                   solid
                     ? "text-date-700 hover:text-date-950"
-                    : "text-cream-100/85 hover:text-cream-50"
+                    : "text-cream-100/85 hover:text-cream-50",
                 )}
               >
                 {item.label}
                 <span
                   className={cn(
-                    "absolute -bottom-1.5 left-0 h-px w-0 bg-gold-500 transition-all duration-300 group-hover:w-full",
-                    solid ? "bg-gold-600" : "bg-gold-300"
+                    "absolute -bottom-1.5 start-0 h-px w-0 bg-gold-500 transition-all duration-300 group-hover:w-full",
+                    solid ? "bg-gold-600" : "bg-gold-300",
                   )}
                 />
               </Link>
@@ -96,21 +99,23 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-1.5">
+            <LocaleSwitcher tone={solid ? "dark" : "light"} />
+
             {/* Inquiry list button */}
             <button
               type="button"
               onClick={openDrawer}
-              aria-label="Open inquiry list"
+              aria-label={dict.nav.openInquiryList}
               className={cn(
                 "relative grid h-11 w-11 place-items-center rounded-full transition-colors",
                 solid
                   ? "text-date-900 hover:bg-date-900/5"
-                  : "text-cream-50 hover:bg-cream-50/10"
+                  : "text-cream-50 hover:bg-cream-50/10",
               )}
             >
               <ClipboardList size={20} strokeWidth={1.8} />
               {mounted && count > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-gold-500 px-1 text-[11px] font-bold leading-none text-date-950 ring-2 ring-cream-50">
+                <span className="absolute -top-0.5 end-0 grid h-5 min-w-5 place-items-center rounded-full bg-gold-500 px-1 text-[11px] font-bold leading-none text-date-950 ring-2 ring-cream-50">
                   {count > 9 ? "9+" : count}
                 </span>
               )}
@@ -118,27 +123,27 @@ export function Header() {
 
             {/* CTA button */}
             <Link
-              href="/inquiry"
+              href={href("/inquiry")}
               className={cn(
                 "hidden items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition-colors sm:inline-flex",
                 solid
                   ? "bg-gold-500 text-date-950 hover:bg-gold-400"
-                  : "bg-cream-50/15 text-cream-50 backdrop-blur hover:bg-cream-50/25"
+                  : "bg-cream-50/15 text-cream-50 backdrop-blur hover:bg-cream-50/25",
               )}
             >
-              Get a Quote
+              {dict.nav.getQuote}
             </Link>
 
             {/* Mobile menu */}
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              aria-label="Toggle menu"
+              aria-label={dict.nav.toggleMenu}
               className={cn(
                 "grid h-11 w-11 place-items-center rounded-full transition-colors lg:hidden",
                 solid
                   ? "text-date-900 hover:bg-date-900/5"
-                  : "text-cream-50 hover:bg-cream-50/10"
+                  : "text-cream-50 hover:bg-cream-50/10",
               )}
             >
               {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -167,25 +172,30 @@ export function Header() {
                 ))}
                 <div className="my-2 h-px bg-date-900/8" />
                 <p className="px-3 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-date-400">
-                  Collections
+                  {dict.nav.collections}
                 </p>
                 {CATEGORIES.map((c) => (
                   <Link
                     key={c.slug}
-                    href={`/products?category=${c.slug}`}
+                    href={href(`/products?category=${c.slug}`)}
                     className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-date-700 transition-colors hover:bg-cream-100"
                   >
-                    <span>{c.label}</span>
-                    <span className="text-xs text-date-400">{c.short}</span>
+                    <span>{categoryLabel(dict, c.slug)}</span>
+                    <span className="text-xs text-date-400">
+                      {categoryShort(dict, c.slug)}
+                    </span>
                   </Link>
                 ))}
                 <div className="my-2 h-px bg-date-900/8" />
                 <Link
-                  href="/inquiry"
+                  href={href("/inquiry")}
                   className="mt-1 flex items-center justify-center rounded-full bg-gold-500 px-5 py-3 text-sm font-semibold text-date-950 transition-colors hover:bg-gold-400"
                 >
-                  Get a Quote
+                  {dict.nav.getQuote}
                 </Link>
+                <div className="mt-3 flex justify-center">
+                  <LocaleSwitcher />
+                </div>
               </nav>
             </motion.div>
           )}

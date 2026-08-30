@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
+import { useI18n } from "@/i18n/I18nProvider";
 
 export function Newsletter() {
+  const { dict, dir } = useI18n();
   const [email, setEmail] = useState("");
   const [done, setDone] = useState(false);
 
@@ -16,16 +18,15 @@ export function Newsletter() {
   return (
     <div className="mx-auto max-w-xl text-center">
       <h3 className="font-display text-2xl font-semibold text-cream-50 sm:text-3xl">
-        Fresh harvests, before they land
+        {dict.newsletter.title}
       </h3>
       <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-cream-100/70">
-        Join the importers' list for early access to new-season stock, bulk pricing and
-        tasting notes — straight from the grove.
+        {dict.newsletter.text}
       </p>
 
       {done ? (
         <div className="mx-auto mt-6 flex max-w-md items-center justify-center gap-2 rounded-full border border-gold-500/30 bg-gold-500/10 px-5 py-3.5 text-sm font-medium text-gold-300">
-          <Check size={16} /> You're on the list — shukran!
+          <Check size={16} /> {dict.newsletter.done}
         </div>
       ) : (
         <form
@@ -37,14 +38,18 @@ export function Newsletter() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Your email address"
+            placeholder={dict.newsletter.emailPlaceholder}
             className="w-full bg-transparent px-4 py-2.5 text-sm text-cream-50 placeholder:text-cream-100/40 focus:outline-none"
           />
           <button
             type="submit"
             className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gold-500 px-5 py-2.5 text-sm font-semibold text-date-950 transition-colors hover:bg-gold-400"
           >
-            Subscribe <ArrowRight size={15} />
+            {dict.newsletter.subscribe}
+            <ArrowRight
+              size={15}
+              className={dir === "rtl" ? "rotate-180" : undefined}
+            />
           </button>
         </form>
       )}
