@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Superseded runs on the same ref are cancelled, except on main — a build
+# of an already-merged commit is the baseline record and must always finish.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  verify:
+    name: Typecheck, lint and build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Node 22 matches the runtime declared in the Dockerfile (node:22-alpine).
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      # NON-BLOCKING ON PURPOSE.
+      # `npm run lint` currently exits 1 with 2 pre-existing errors that predate
+      # this workflow and are out of scope for a CI-only change:
+      #   - src/components/Header.tsx:38   react-hooks/set-state-in-effect
+      #   - src/lib/useMounted.ts:8        react-hooks/set-state-in-effect
+      # The step still runs and its output is reported. Remove
+      # `continue-on-error: true` once those two are fixed to make lint a gate.
+      - name: Lint (non-blocking)
+        continue-on-error: true
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
