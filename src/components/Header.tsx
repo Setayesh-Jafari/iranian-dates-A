@@ -50,7 +50,10 @@ export function Header() {
 
   return (
     <>
-      <div className="relative z-[60] bg-date-950 text-cream-50">
+      {/* Announcement bar: stays in normal document flow and scrolls away.
+          It must paint BELOW the sticky header, so it keeps no z-index of its
+          own (a higher one would overlap the header on the first scroll px). */}
+      <div className="relative bg-date-950 text-cream-50">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-2.5 px-4 py-2 text-center text-[11px] tracking-wide sm:text-xs">
           <span className="hidden text-cream-100/70 sm:inline">
             {dict.nav.announcement1}
