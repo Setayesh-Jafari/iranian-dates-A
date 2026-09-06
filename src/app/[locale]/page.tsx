@@ -148,7 +148,7 @@ export default async function HomePage({
                 <ArrowRight size={16} className={flip} />
               </Link>
               <Link
-                href={localePath(locale, "/products")}
+                href={localePath(locale, "/products?q=Mazafati")}
                 className="inline-flex items-center gap-2 rounded-full border border-cream-50/25 px-7 py-3.5 text-sm font-semibold text-cream-50 transition-colors hover:border-cream-50/60 hover:bg-cream-50/5"
               >
                 {dict.home.heroCtaSecondary}
