@@ -18,7 +18,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { AddToInquiryButton } from "@/components/AddToCartButton";
 import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
-import { CATEGORIES } from "@/lib/types";
+import { CATEGORIES, type Product } from "@/lib/types";
 import { getDictionary, categoryLabel, categoryShort } from "@/i18n";
 import {
   dir as dirOf,
@@ -92,9 +92,14 @@ export default async function HomePage({
     },
   ];
 
+  // Product data is an enhancement of the homepage, not a precondition for it.
+  // If the database is unreachable these queries must not take the whole page
+  // down with them — the static sections (hero, collections, story, process,
+  // CTA) carry the B2B message on their own. Failures degrade to "no products
+  // to show" rather than a full-page error; nothing is faked.
   const [featured, flagship] = await Promise.all([
-    getProducts({ sort: "featured", limit: 8 }),
-    getProductBySlug("mazafati-kimia-dates"),
+    getProducts({ sort: "featured", limit: 8 }).catch(() => [] as Product[]),
+    getProductBySlug("mazafati-kimia-dates").catch(() => null),
   ]);
 
   return (
