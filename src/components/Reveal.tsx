@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useReducedMotion } from "motion/react";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { EASE } from "@/lib/motion";
 
 export function Reveal({
@@ -17,7 +17,18 @@ export function Reveal({
 }) {
   const reduce = useReducedMotion();
 
-  if (reduce) return <div className={className}>{children}</div>;
+  // The reveal animation is a progressive enhancement: it may only hide its
+  // children once the client is running and can animate them back in. Rendering
+  // `opacity: 0` on the server would leave the whole page invisible for anyone
+  // whose JS has not executed (hydration error, blocked/failed chunk, crawler),
+  // which is exactly how the homepage appeared to be "empty".
+  const [canAnimate, setCanAnimate] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setCanAnimate(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
+  if (reduce || !canAnimate) return <div className={className}>{children}</div>;
 
   return (
     <motion.div

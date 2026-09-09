@@ -144,13 +144,13 @@ export const en = {
   },
 
   home: {
-    heroBadge: "B2B Wholesale · Export Inquiries Welcome",
-    heroTitleA: "Iranian dates,",
-    heroTitleB: "priced on inquiry.",
+    heroBadge: "IRANIAN MAZAFATI DATES",
+    heroTitleA: "Iranian Dates, Prepared for",
+    heroTitleB: "Global Markets",
     heroText:
-      "Premium Iranian dates for importers, wholesalers and distributors. Request a quote for current availability, product specifications and pricing.",
-    heroCtaPrimary: "Request a quote",
-    heroCtaSecondary: "Browse catalog",
+      "We source and prepare Iranian Mazafati dates for international buyers, with flexible packaging options and a focus on consistent quality and export-ready supply.",
+    heroCtaPrimary: "Request an Export Quote",
+    heroCtaSecondary: "Explore Mazafati Dates",
     heroPoint1: "Export information available upon request",
     heroPoint2: "Certification documents available for applicable shipments",
     heroAlt: "Premium Iranian dates in a bowl (placeholder stock imagery)",

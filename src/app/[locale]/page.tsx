@@ -18,7 +18,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { AddToInquiryButton } from "@/components/AddToCartButton";
 import { Reveal } from "@/components/Reveal";
 import { SectionHeading } from "@/components/SectionHeading";
-import { CATEGORIES } from "@/lib/types";
+import { CATEGORIES, type Product } from "@/lib/types";
 import { getDictionary, categoryLabel, categoryShort } from "@/i18n";
 import {
   dir as dirOf,
@@ -92,9 +92,14 @@ export default async function HomePage({
     },
   ];
 
+  // Product data is an enhancement of the homepage, not a precondition for it.
+  // If the database is unreachable these queries must not take the whole page
+  // down with them — the static sections (hero, collections, story, process,
+  // CTA) carry the B2B message on their own. Failures degrade to "no products
+  // to show" rather than a full-page error; nothing is faked.
   const [featured, flagship] = await Promise.all([
-    getProducts({ sort: "featured", limit: 8 }),
-    getProductBySlug("mazafati-kimia-dates"),
+    getProducts({ sort: "featured", limit: 8 }).catch(() => [] as Product[]),
+    getProductBySlug("mazafati-kimia-dates").catch(() => null),
   ]);
 
   return (
@@ -148,7 +153,7 @@ export default async function HomePage({
                 <ArrowRight size={16} className={flip} />
               </Link>
               <Link
-                href={localePath(locale, "/products")}
+                href={localePath(locale, "/products?q=Mazafati")}
                 className="inline-flex items-center gap-2 rounded-full border border-cream-50/25 px-7 py-3.5 text-sm font-semibold text-cream-50 transition-colors hover:border-cream-50/60 hover:bg-cream-50/5"
               >
                 {dict.home.heroCtaSecondary}

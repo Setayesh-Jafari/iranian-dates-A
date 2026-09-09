@@ -38,7 +38,12 @@ export function Header() {
     setMenuOpen(false);
   }, [pathname]);
 
-  const solid = scrolled || !isHome || menuOpen;
+  // The transparent-over-hero treatment is a progressive enhancement: it can
+  // only be trusted once the client is running and the scroll listener can
+  // turn the header solid again. Before hydration (and if client JS never
+  // executes) we render the solid variant, so the navigation is always legible
+  // instead of being permanently transparent over page content.
+  const solid = !mounted || scrolled || !isHome || menuOpen;
 
   const NAV = [
     { label: dict.nav.products, href: href("/products") },
@@ -50,7 +55,12 @@ export function Header() {
 
   return (
     <>
-      <div className="relative z-[60] bg-date-950 text-cream-50">
+      {/* Announcement bar: stays in normal document flow and scrolls away.
+          It needs a z-index ABOVE the hero (which uses a negative top margin to
+          slide under the transparent header, and would otherwise paint over
+          this strip and blend with its text) but BELOW the sticky header, so
+          the header always covers it once the page is scrolled. */}
+      <div className="relative z-30 bg-date-950 text-cream-50">
         <div className="mx-auto flex max-w-7xl items-center justify-center gap-2.5 px-4 py-2 text-center text-[11px] tracking-wide sm:text-xs">
           <span className="hidden text-cream-100/70 sm:inline">
             {dict.nav.announcement1}
@@ -68,7 +78,7 @@ export function Header() {
         className={cn(
           "sticky top-0 z-50 transition-all duration-300",
           solid
-            ? "border-b border-date-900/10 bg-cream-50/90 shadow-[0_1px_0_0_rgba(23,14,6,0.03)] backdrop-blur-xl"
+            ? "border-b border-date-900/10 bg-cream-100 shadow-[0_1px_3px_0_rgba(23,14,6,0.10)]"
             : "border-b border-transparent bg-transparent",
         )}
       >
