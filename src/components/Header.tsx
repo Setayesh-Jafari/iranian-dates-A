@@ -38,7 +38,12 @@ export function Header() {
     setMenuOpen(false);
   }, [pathname]);
 
-  const solid = scrolled || !isHome || menuOpen;
+  // The transparent-over-hero treatment is a progressive enhancement: it can
+  // only be trusted once the client is running and the scroll listener can
+  // turn the header solid again. Before hydration (and if client JS never
+  // executes) we render the solid variant, so the navigation is always legible
+  // instead of being permanently transparent over page content.
+  const solid = !mounted || scrolled || !isHome || menuOpen;
 
   const NAV = [
     { label: dict.nav.products, href: href("/products") },
