@@ -3,3 +3,8 @@ node_modules
 .env
 .env.local
 tsconfig.tsbuildinfo
+
+# FARVAND catalog — large binary deliverables live in the workspace,
+# not in Git history (regenerate with farvand-catalog/generator: node build.js)
+farvand-catalog/psd/
+farvand-catalog/preview/
