@@ -136,8 +136,20 @@ function renderTextLayer(block, prepared) {
   return { canvas, left, top, right, bottom };
 }
 
-/** object-fit: cover drawing */
-function drawImageCover(ctx, img, x, y, w, h) {
+/** object-fit: cover drawing. `crop` = {sx, sy, sw, sh} selects a source rect first.
+ *  Always clips to the target box so overlapping layouts stay pixel-consistent. */
+function drawImageCover(ctx, img, x, y, w, h, crop) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+  if (crop) {
+    const scale = Math.max(w / crop.sw, h / crop.sh);
+    const dw = crop.sw * scale, dh = crop.sh * scale;
+    ctx.drawImage(img, crop.sx, crop.sy, crop.sw, crop.sh, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+    ctx.restore();
+    return;
+  }
   const ir = img.width / img.height;
   const tr = w / h;
   let sw, sh, sx, sy;
@@ -147,6 +159,7 @@ function drawImageCover(ctx, img, x, y, w, h) {
     sw = img.width; sh = sw / tr; sx = 0; sy = (img.height - sh) / 2;
   }
   ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  ctx.restore();
 }
 
 /** object-fit: contain drawing (letterboxed, transparent) */

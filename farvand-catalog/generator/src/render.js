@@ -39,10 +39,26 @@ async function drawBlock(ctx, block, assets) {
       if (block.opacity !== undefined) {
         ctx.save();
         ctx.globalAlpha = block.opacity;
-        drawImageCover(ctx, img, block.x, block.y, block.w, block.h);
+        drawImageCover(ctx, img, block.x, block.y, block.w, block.h, block.crop);
         ctx.restore();
       } else {
-        drawImageCover(ctx, img, block.x, block.y, block.w, block.h);
+        drawImageCover(ctx, img, block.x, block.y, block.w, block.h, block.crop);
+      }
+      break;
+    }
+    case 'map': {
+      const { renderMapGraphic, mapLabels } = require('./map');
+      const g = renderMapGraphic({ x: block.x, y: block.y, w: block.w, h: block.h });
+      ctx.drawImage(g, block.x, block.y);
+      if (block.labels) {
+        for (const lb of mapLabels({ x: block.x, y: block.y, w: block.w, h: block.h })) {
+          const blk = {
+            text: lb.text, x: lb.x, y: lb.y, align: lb.align,
+            style: block.labelStyle, color: block.labelColor || T.greenInk,
+          };
+          const prepared = prepareText(blk);
+          drawText(ctx, blk, prepared);
+        }
       }
       break;
     }

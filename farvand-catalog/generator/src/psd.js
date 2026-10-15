@@ -50,7 +50,7 @@ async function imageLayer(block) {
   const h = Math.max(1, Math.round(block.h));
   const canvas = makeCanvas(w, h);
   const ctx = canvas.getContext('2d');
-  drawImageCover(ctx, img, 0, 0, w, h);
+  drawImageCover(ctx, img, 0, 0, w, h, block.crop);
   return {
     name: block.name || `IMG · ${block.src}`,
     left: Math.round(block.x),
@@ -59,6 +59,29 @@ async function imageLayer(block) {
     bottom: Math.round(block.y + h),
     canvas,
   };
+}
+
+function mapLayers(block) {
+  const { renderMapGraphic, mapLabels } = require('./map');
+  const w = Math.max(1, Math.round(block.w));
+  const h = Math.max(1, Math.round(block.h));
+  const graphic = renderMapGraphic({ x: block.x, y: block.y, w, h });
+  const out = [{
+    name: block.name || 'MAP · Iran silhouette',
+    left: Math.round(block.x), top: Math.round(block.y),
+    right: Math.round(block.x + w), bottom: Math.round(block.y + h),
+    canvas: graphic,
+  }];
+  if (block.labels) {
+    for (const lb of mapLabels({ x: block.x, y: block.y, w, h })) {
+      out.push(textLayer({
+        type: 'text', text: lb.text, x: lb.x, y: lb.y, align: lb.align,
+        style: block.labelStyle, color: block.labelColor || '#0F3B2E',
+        name: `TXT · Map pin · ${lb.city}`, role: 'map',
+      }));
+    }
+  }
+  return out;
 }
 
 function scrimLayer(block) {
@@ -112,14 +135,19 @@ async function blockToLayer(block) {
   }
 }
 
+async function blockToLayers(block) {
+  if (block.type === 'map') return mapLayers(block);
+  const one = await blockToLayer(block);
+  return one ? [one] : [];
+}
+
 /** Build the ag-psd document for a page. */
 async function buildPsdDocument(page) {
   const children = [];
   for (const g of page.groups) {
     const groupChildren = [];
     for (const b of g.blocks) {
-      const layer = await blockToLayer(b);
-      if (layer) groupChildren.push(layer);
+      for (const layer of await blockToLayers(b)) groupChildren.push(layer);
     }
     children.push({ name: g.name, opened: true, children: groupChildren });
   }

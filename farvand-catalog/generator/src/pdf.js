@@ -23,11 +23,13 @@ function fontPath(ps) {
 }
 
 /** Crop a photo to an exact box and return a JPEG buffer (cached). */
-async function croppedJpeg(src, w, h) {
-  const key = `${src}|${w}x${h}`;
+async function croppedJpeg(src, w, h, crop) {
+  const key = `${src}|${w}x${h}|${crop ? crop.sx + ',' + crop.sy + ',' + crop.sw + ',' + crop.sh : 'full'}`;
   if (!cropCache.has(key)) {
     const buf = fs.readFileSync(path.join(IMG_DIR, src));
-    const out = await sharp(buf)
+    let img = sharp(buf);
+    if (crop) img = img.extract({ left: Math.round(crop.sx), top: Math.round(crop.sy), width: Math.round(crop.sw), height: Math.round(crop.sh) });
+    const out = await img
       .resize(Math.round(w), Math.round(h), { fit: 'cover', position: 'centre' })
       .jpeg({ quality: 88, chromaSubsampling: '4:4:4' })
       .toBuffer();
@@ -53,10 +55,10 @@ async function drawPage(doc, page) {
   for (const g of page.groups) {
     for (const b of g.blocks) {
       if (hasScrim) {
-        if (b.type === 'rect' || b.type === 'image' || b.type === 'scrim') art.push(b);
+        if (b.type === 'rect' || b.type === 'image' || b.type === 'scrim' || b.type === 'map') art.push(b);
         else rest.push(b);
       } else {
-        if (b.type === 'image') art.push(b);
+        if (b.type === 'image' || b.type === 'map') art.push(b);
         else rest.push(b);
       }
     }
@@ -81,7 +83,10 @@ async function drawPage(doc, page) {
         }
       } else if (b.type === 'image') {
         const img = await loadImage(path.join(IMG_DIR, b.src));
-        require('./lib').drawImageCover(ctx, img, b.x, b.y, b.w, b.h);
+        require('./lib').drawImageCover(ctx, img, b.x, b.y, b.w, b.h, b.crop);
+      } else if (b.type === 'map') {
+        const { renderMapGraphic } = require('./map');
+        ctx.drawImage(renderMapGraphic({ x: b.x, y: b.y, w: b.w, h: b.h }), b.x, b.y);
       } else if (b.type === 'scrim') {
         const g = require('./lib').gradientCanvas(b.w, b.h, b.stops, b.vertical !== false);
         ctx.drawImage(g, b.x, b.y);
@@ -102,8 +107,27 @@ async function drawPage(doc, page) {
             .stroke();
         }
       } else if (b.type === 'image') {
-        const jpeg = await croppedJpeg(b.src, b.w, b.h);
+        const jpeg = await croppedJpeg(b.src, b.w, b.h, b.crop);
         doc.image(jpeg, b.x * S, b.y * S, { width: b.w * S, height: b.h * S });
+      } else if (b.type === 'map') {
+        const { renderMapGraphic, mapLabels } = require('./map');
+        const g = renderMapGraphic({ x: 0, y: 0, w: b.w, h: b.h });
+        doc.image(g.toBuffer('image/png'), b.x * S, b.y * S, { width: b.w * S, height: b.h * S });
+        if (b.labels) {
+          for (const lb of mapLabels({ x: b.x, y: b.y, w: b.w, h: b.h })) {
+            const blk = { type: 'text', text: lb.text, x: lb.x, y: lb.y, align: lb.align, style: b.labelStyle, color: b.labelColor || '#0F3B2E' };
+            const prepared = prepareText(blk);
+            doc.registerFont(`f_${blk.style.ps}`, fontPath(blk.style.ps));
+            doc.font(`f_${blk.style.ps}`).fontSize(blk.style.size * S);
+            doc.fillColor(hex(blk.color));
+            prepared.lines.forEach((line, i) => {
+              if (!line) return;
+              doc.text(line, blk.x * S, prepared.baselines[i] * S, {
+                lineBreak: false, baseline: 'alphabetic', characterSpacing: (blk.style.tracking || 0) * S, align: 'left',
+              });
+            });
+          }
+        }
       }
     }
   }
