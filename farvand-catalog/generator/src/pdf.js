@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const PDFDocument = require('pdfkit');
 const sharp = require('sharp');
-const { prepareText, loadImage } = require('./lib');
+const { prepareText, loadImage, measure, makeCanvas, gradientCanvas, drawImageCover } = require('./lib');
 const { PAGE, C, T, FONT_FILES, FONT_DIR } = require('./theme');
 const { IMG_DIR } = require('./render');
 
@@ -42,130 +42,112 @@ const hex = (c) => ((c || '#000000').charAt(0) === '#' ? c : `#${c}`).toUpperCas
 
 /**
  * Render one page into the PDF document.
- * `artBlocks` (background + photography + overlays) are composited to a single
- * image so that gradient scrims keep their transparency; all type stays vector.
+ * Blocks are drawn in page-model order (background → photography → overlays →
+ * type), so the PDF matches the canvas preview and the PSD composite exactly.
+ * Gradient scrims keep transparency by compositing the artwork layer to one
+ * JPEG first; type always stays vector.
  */
+function drawTextBlock(doc, b) {
+  const style = b.style;
+  const prepared = prepareText(b);
+  doc.registerFont(`f_${style.ps}`, fontPath(style.ps));
+  doc.font(`f_${style.ps}`).fontSize(style.size * S);
+  doc.fillColor(hex(b.color));
+  prepared.lines.forEach((line, i) => {
+    if (!line) return;
+    // same alignment model as lib.drawText (measure-based)
+    let x = b.x;
+    if (b.align === 'center') x = b.x + (b.width ? (b.width - measure(line, style).width) / 2 : 0);
+    else if (b.align === 'right') x = b.x + (b.width ? b.width - measure(line, style).width : 0);
+    doc.text(line, x * S, prepared.baselines[i] * S, {
+      lineBreak: false, baseline: 'alphabetic', characterSpacing: (style.tracking || 0) * S, align: 'left',
+    });
+  });
+}
+
+function drawMap(doc, b) {
+  const { renderMapGraphic, mapLabels } = require('./map');
+  const g = renderMapGraphic({ x: 0, y: 0, w: b.w, h: b.h });
+  doc.image(g.toBuffer('image/png'), b.x * S, b.y * S, { width: b.w * S, height: b.h * S });
+  if (b.labels) {
+    for (const lb of mapLabels({ x: b.x, y: b.y, w: b.w, h: b.h })) {
+      drawTextBlock(doc, { type: 'text', text: lb.text, x: lb.x, y: lb.y, align: lb.align, style: b.labelStyle, color: b.labelColor || '#0F3B2E' });
+    }
+  }
+}
+
 async function drawPage(doc, page) {
   doc.addPage({ size: [A4.width, A4.height], margin: 0 });
 
   const hasScrim = page.groups.some((g) => g.blocks.some((b) => b.type === 'scrim'));
-  const art = [];
-  const rest = [];
 
-  for (const g of page.groups) {
-    for (const b of g.blocks) {
-      if (hasScrim) {
-        if (b.type === 'rect' || b.type === 'image' || b.type === 'scrim' || b.type === 'map') art.push(b);
-        else rest.push(b);
-      } else {
-        if (b.type === 'image' || b.type === 'map') art.push(b);
-        else rest.push(b);
-      }
-    }
-  }
-
-  /* ---- background / photography -------------------------------------- */
   if (hasScrim) {
-    const canvas = require('./lib').makeCanvas(PAGE.w, PAGE.h);
+    /* artwork (bg + photography + scrims) is composited so gradients keep alpha */
+    const canvas = makeCanvas(PAGE.w, PAGE.h);
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = C.cream;
     ctx.fillRect(0, 0, PAGE.w, PAGE.h);
-    for (const b of art) {
-      if (b.type === 'rect') {
-        if (b.color && b.color !== 'transparent') {
-          ctx.fillStyle = b.color;
-          ctx.fillRect(b.x, b.y, b.w, b.h);
-        }
-        if (b.stroke) {
-          ctx.strokeStyle = b.stroke;
-          ctx.lineWidth = b.strokeWidth || 1;
-          ctx.strokeRect(b.x + ctx.lineWidth / 2, b.y + ctx.lineWidth / 2, b.w - ctx.lineWidth, b.h - ctx.lineWidth);
-        }
-      } else if (b.type === 'image') {
-        const img = await loadImage(path.join(IMG_DIR, b.src));
-        require('./lib').drawImageCover(ctx, img, b.x, b.y, b.w, b.h, b.crop);
-      } else if (b.type === 'map') {
-        const { renderMapGraphic } = require('./map');
-        ctx.drawImage(renderMapGraphic({ x: b.x, y: b.y, w: b.w, h: b.h }), b.x, b.y);
-      } else if (b.type === 'scrim') {
-        const g = require('./lib').gradientCanvas(b.w, b.h, b.stops, b.vertical !== false);
-        ctx.drawImage(g, b.x, b.y);
-      }
-    }
-    const jpeg = await canvas.toBuffer('image/jpeg', 90);
-    doc.image(jpeg, 0, 0, { width: A4.width, height: A4.height });
-  } else {
-    for (const b of art) {
-      if (b.type === 'rect') {
-        if (b.color && b.color !== 'transparent') {
-          doc.rect(b.x * S, b.y * S, b.w * S, b.h * S).fill(hex(b.color));
-        }
-        if (b.stroke) {
-          doc.lineWidth((b.strokeWidth || 1) * S)
-            .strokeColor(hex(b.stroke))
-            .rect(b.x * S, b.y * S, b.w * S, b.h * S)
-            .stroke();
-        }
-      } else if (b.type === 'image') {
-        const jpeg = await croppedJpeg(b.src, b.w, b.h, b.crop);
-        doc.image(jpeg, b.x * S, b.y * S, { width: b.w * S, height: b.h * S });
-      } else if (b.type === 'map') {
-        const { renderMapGraphic, mapLabels } = require('./map');
-        const g = renderMapGraphic({ x: 0, y: 0, w: b.w, h: b.h });
-        doc.image(g.toBuffer('image/png'), b.x * S, b.y * S, { width: b.w * S, height: b.h * S });
-        if (b.labels) {
-          for (const lb of mapLabels({ x: b.x, y: b.y, w: b.w, h: b.h })) {
-            const blk = { type: 'text', text: lb.text, x: lb.x, y: lb.y, align: lb.align, style: b.labelStyle, color: b.labelColor || '#0F3B2E' };
-            const prepared = prepareText(blk);
-            doc.registerFont(`f_${blk.style.ps}`, fontPath(blk.style.ps));
-            doc.font(`f_${blk.style.ps}`).fontSize(blk.style.size * S);
-            doc.fillColor(hex(blk.color));
-            prepared.lines.forEach((line, i) => {
-              if (!line) return;
-              doc.text(line, blk.x * S, prepared.baselines[i] * S, {
-                lineBreak: false, baseline: 'alphabetic', characterSpacing: (blk.style.tracking || 0) * S, align: 'left',
-              });
-            });
+    for (const g of page.groups) {
+      for (const b of g.blocks) {
+        if (b.type === 'text') continue;
+        if (b.type === 'rect') {
+          if (b.color && b.color !== 'transparent') {
+            ctx.fillStyle = b.color;
+            ctx.fillRect(b.x, b.y, b.w, b.h);
           }
+          if (b.stroke) {
+            ctx.strokeStyle = b.stroke;
+            ctx.lineWidth = b.strokeWidth || 1;
+            ctx.strokeRect(b.x + ctx.lineWidth / 2, b.y + ctx.lineWidth / 2, b.w - ctx.lineWidth, b.h - ctx.lineWidth);
+          }
+        } else if (b.type === 'image') {
+          const img = await loadImage(path.join(IMG_DIR, b.src));
+          drawImageCover(ctx, img, b.x, b.y, b.w, b.h, b.crop);
+        } else if (b.type === 'map') {
+          ctx.drawImage(renderMapGraphicSafe({ x: b.x, y: b.y, w: b.w, h: b.h }), b.x, b.y);
+        } else if (b.type === 'scrim') {
+          const g2 = gradientCanvas(b.w, b.h, b.stops, b.vertical !== false);
+          ctx.drawImage(g2, b.x, b.y);
+        }
+      }
+    }
+    doc.image(await canvas.toBuffer('image/jpeg', 90), 0, 0, { width: A4.width, height: A4.height });
+    /* vector type on top */
+    for (const g of page.groups) {
+      for (const b of g.blocks) {
+        if (b.type === 'text') drawTextBlock(doc, b);
+      }
+    }
+  } else {
+    /* single in-order pass — exactly the canvas/PSD stacking */
+    for (const g of page.groups) {
+      for (const b of g.blocks) {
+        if (b.type === 'rect') {
+          if (b.color && b.color !== 'transparent') doc.rect(b.x * S, b.y * S, b.w * S, b.h * S).fill(hex(b.color));
+          if (b.stroke) {
+            doc.lineWidth((b.strokeWidth || 1) * S)
+              .strokeColor(hex(b.stroke))
+              .rect(b.x * S, b.y * S, b.w * S, b.h * S)
+              .stroke();
+          }
+        } else if (b.type === 'image') {
+          const jpeg = await croppedJpeg(b.src, b.w, b.h, b.crop);
+          doc.image(jpeg, b.x * S, b.y * S, { width: b.w * S, height: b.h * S });
+        } else if (b.type === 'map') {
+          drawMap(doc, b);
+        } else if (b.type === 'scrim') {
+          const g2 = gradientCanvas(b.w, b.h, b.stops, b.vertical !== false);
+          doc.image(g2.toBuffer('image/png'), b.x * S, b.y * S, { width: b.w * S, height: b.h * S });
+        } else if (b.type === 'text') {
+          drawTextBlock(doc, b);
         }
       }
     }
   }
+}
 
-  /* ---- type ------------------------------------------------------------ */
-  for (const b of rest) {
-    if (b.type !== 'text') {
-      if (b.type === 'rect') {
-        if (b.color && b.color !== 'transparent') doc.rect(b.x * S, b.y * S, b.w * S, b.h * S).fill(hex(b.color));
-        if (b.stroke) {
-          doc.lineWidth((b.strokeWidth || 1) * S)
-            .strokeColor(hex(b.stroke))
-            .rect(b.x * S, b.y * S, b.w * S, b.h * S)
-            .stroke();
-        }
-      } else if (b.type === 'scrim') {
-        const g = require('./lib').gradientCanvas(b.w, b.h, b.stops, b.vertical !== false);
-        const png = g.toBuffer('image/png');
-        doc.image(png, b.x * S, b.y * S, { width: b.w * S, height: b.h * S });
-      }
-      continue;
-    }
-
-    const style = b.style;
-    const prepared = prepareText(b);
-    doc.registerFont(`f_${style.ps}`, fontPath(style.ps));
-    doc.font(`f_${style.ps}`).fontSize(style.size * S);
-    doc.fillColor(hex(b.color));
-    prepared.lines.forEach((line, i) => {
-      if (!line) return;
-      doc.text(line, b.x * S, prepared.baselines[i] * S, {
-        lineBreak: false,
-        baseline: 'alphabetic',
-        characterSpacing: (style.tracking || 0) * S,
-        align: 'left',
-      });
-    });
-  }
+function renderMapGraphicSafe(box) {
+  return require('./map').renderMapGraphic(box);
 }
 
 async function writePdf(pages, outPath) {

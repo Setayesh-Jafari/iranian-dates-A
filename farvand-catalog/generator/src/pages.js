@@ -416,6 +416,12 @@ function varietyPage({ id, file, pageNo, section, eyebrow, title, deck, img, pho
       caption(`${title} — packed and graded for export.`, tx, 3060, { width: tw, name: 'TXT · Photo caption 2' }),
     ],
   });
+  g.push({
+    name: '10 · Editor note',
+    blocks: B.editorNote(tx, 3118, tw,
+      'Replace every [BRACKETED] field with your verified figures, then change the Status column to Confirmed. Keep unverified numbers out of the document.',
+      { h: 128, name: `EDITOR NOTE · ${title}` }),
+  });
   PAGES.push({ id, file, title, groups: g });
 }
 
@@ -671,16 +677,8 @@ varietyPage({
         type: 'map', id: 'map-iran', x: PAGE.m + 30, y: 2530, w: 1180, h: 700,
         labels: false,
       },
-      ...[
-        ['01', 'Bam & Kerman', 'Mazafati · Kimri · Medjoul · Shahani · Najafi'],
-        ['02', 'Dashtestan & Kazerun, Fars', 'Zahedi · Lasht · Morki · Harani'],
-        ['03', 'Hajiabad, Hormozgan', 'Piarom'],
-        ['04', 'Saravan, Sistan & Baluchestan', 'Medjoul · Barhi · Najafi'],
-        ['05', 'Abadan & Khorramshahr, Khuzestan', 'Deglet en-Nour'],
-        ['06', 'Jiroft & Kahnoj, Kerman', 'Shahani · Najafi'],
-        ['07', 'Jahrom, Fars', 'Harani'],
-        ['08', 'Kerman city', 'Shahani'],
-      ].flatMap((row, i) => {
+      // legend numbering is driven by the same PINS array as the map graphic
+      ...require('./map').legendRows().map((r, i) => [String(i + 1).padStart(2, '0'), `${r.city}, ${r.province}`, r.grows]).flatMap((row, i) => {
         const y = 2548 + i * 92;
         return [
           B.text(row[0], 1420, y, { style: { ...T_.h4, size: 21 }, color: T.gold, name: `TXT · Map pin no ${row[0]}`, role: 'numeral' }),
@@ -688,8 +686,8 @@ varietyPage({
           B.text(row[2], 1480, y + 40, { style: 'caption', color: T.onGreenSoft, width: 830, name: `TXT · Map grows ${row[0]}`, role: 'caption' }),
         ];
       }),
-      B.text('Typical growing regions of each cultivar. The confirmed origin of your lot is stated in the quotation.', PAGE.m + 50, 3250, {
-        style: 'caption', color: T.onGreenFaint, width: 1200, name: 'TXT · Map footnote', role: 'caption',
+      B.text('Typical growing regions of each cultivar — the confirmed origin of your lot is stated in the quotation.', PAGE.m + 50, 3232, {
+        style: 'caption', color: T.onGreenFaint, width: 1600, name: 'TXT · Map footnote', role: 'caption',
       }),
     ],
   });
@@ -758,8 +756,8 @@ varietyPage({
         const x = PAGE.m + 60 + (i % 3) * 680;
         const y = 2820 + Math.floor(i / 3) * 90;
         return [
-          B.rect(x, y + 14, 8, 8, T.gold, { name: `BULLET · ${d}` }),
-          B.text(d, x + 30, y, { style: 'bodySm', color: C.cream, width: 600, name: `TXT · Document · ${d}`, role: 'body' }),
+          B.rect(x, y + 4, 24, 24, 'transparent', { stroke: T.gold, strokeWidth: 2, name: `CHECKBOX · ${d}` }),
+          B.text(d, x + 42, y, { style: 'bodySm', color: C.cream, width: 580, name: `TXT · Document · ${d}`, role: 'body' }),
         ];
       }),
       B.text('[EXPORT DOCUMENTS CONFIRMED PER DESTINATION]', PAGE.m + 60, 3050, {
@@ -849,6 +847,12 @@ varietyPage({
     ],
   });
   g.push({
+    name: '07b · Editor note',
+    blocks: B.editorNote(PAGE.m, 2770, PAGE.contentW,
+      'Fill every [BRACKETED] pack field with your pack-house figures — net weight, units per carton, carton dimensions and pallet data — before this catalog goes to a buyer.',
+      { h: 118, name: 'EDITOR NOTE · Packaging' }),
+  });
+  g.push({
     name: '08 · How private label works',
     blocks: [
       B.rect(PAGE.m, 2900, PAGE.contentW, 380, T.green, { name: 'BG · Process band' }),
@@ -910,11 +914,17 @@ varietyPage({
     }),
   });
   g.push({
+    name: '04b · Editor note',
+    blocks: B.editorNote(PAGE.m, 1258, PAGE.contentW,
+      'Commercial terms are placeholders: fill MOQ, capacity, lead time, incoterms, port of loading and payment terms with the figures you will honour, then remove this note.',
+      { h: 92, name: 'EDITOR NOTE · Terms' }),
+  });
+  g.push({
     name: '05 · Photography',
     blocks: [
-      B.image('logistics.jpg', PAGE.m, 1360, 1040, 500, { name: 'IMG · Port logistics' }),
-      B.image('crates.jpg', 1240, 1360, 520, 500, { name: 'IMG · Harvest crates' }),
-      B.image('market.jpg', 1790, 1360, 520, 500, { name: 'IMG · Date market' }),
+      B.image('logistics.jpg', PAGE.m, 1380, 1040, 480, { name: 'IMG · Port logistics' }),
+      B.image('crates.jpg', 1240, 1380, 520, 480, { name: 'IMG · Harvest crates' }),
+      B.image('market.jpg', 1790, 1380, 520, 480, { name: 'IMG · Date market' }),
     ],
   });
   g.push({
@@ -1006,6 +1016,12 @@ varietyPage({
         'Tell us the variety, the pack format, the quantity and the destination port. We will reply with a specification and an offer — and with anything we cannot do this season stated plainly.',
         PAGE.m, 870, { style: 'body', color: T.onGreenSoft, width: 1150, name: 'TXT · Deck', role: 'deck' }),
     ],
+  });
+  g.push({
+    name: '03b · Editor note',
+    blocks: B.editorNote(PAGE.m, 1024, 1150,
+      'Replace the [BRACKETED] contact fields and the logo layer (LOGO · Compass mark) with your company details before sending.',
+      { h: 118, onDark: true, name: 'EDITOR NOTE · Contact' }),
   });
   g.push({
     name: '04 · Contact details',

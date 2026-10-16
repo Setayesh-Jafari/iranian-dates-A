@@ -69,6 +69,9 @@ P12 **Contact & CTA** — deep green closing page: “Request a Quotation”, co
 - 12-column grid, 4 mm gutters. Cards and tables snap to it; nothing floats.
 - Vertical rhythm: eyebrow (letterspaced, gold) → display title (serif) → 20 mm gold rule → deck paragraph. Repeat identically on every interior page.
 - Header: wordmark left, section name + `NN / 12` right, hairline rule under. Footer: hairline rule, catalogue name left, `[YEAR]` centre, page number right.
+- Include **editor notes** on any page with bracketed fill-in fields: a thin gold-bordered box titled `EDITOR NOTE — REMOVE BEFORE SENDING` with one italic sentence naming the fields the client must complete. They are the last group on the page and never overlap live content.
+- Export-document lists are **checkbox lists** (stroked square + label), not bullet dots.
+- If a page carries a numbered map/legend, the legend numbers MUST be generated from the same data array as the map pins — never renumber them independently.
 - Density over whitespace: this is a food catalog, not an art book. Fill the page with photography, origin data and useful buyer information. Cut copy only if it is fluff — never leave a large empty field when a photograph or colour panel would sell the product.
 - Tables: label column 38%, value column, optional STATUS column. Hairline rules only, no fills except one green feature panel per page maximum.
 - Text never sits on a busy photograph without a solid quiet area or a soft dark scrim.

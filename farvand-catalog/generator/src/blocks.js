@@ -3,7 +3,7 @@
  * A page is { id, name, blocks: [...] } where blocks are grouped into
  * Photoshop groups by their `group` property.
  */
-const { T_, C, T, PAGE } = require('./theme');
+const { T_, C, T, PAGE, mix } = require('./theme');
 
 let uid = 0;
 const nid = () => `b${(uid += 1)}`;
@@ -178,4 +178,28 @@ function dataTable(x, y, w, rows, opts = {}) {
   return out;
 }
 
-module.exports = { rect, line, image, scrim, text, group, furniture, titleBlock, dataTable };
+
+/**
+ * Editor note — a bordered guidance box (Claude-brief inspired).
+ * Tells the buyer's marketing team exactly which fields to fill before sending.
+ */
+function editorNote(x, y, w, body, opts = {}) {
+  const onDark = !!opts.onDark;
+  const fill = onDark ? 'transparent' : mix(T.gold, C.cream, 0.92);
+  const stroke = onDark ? T.gold : T.goldDeep;
+  const ink = onDark ? T.onGreenSoft : T.brownMid;
+  const h = opts.h || 118;
+  return [
+    rect(x, y, w, h, fill, { stroke, strokeWidth: 2, name: opts.name ? `${opts.name} · frame` : 'EDITOR NOTE · frame' }),
+    text('EDITOR NOTE — REMOVE BEFORE SENDING', x + 28, y + 24, {
+      style: 'label', color: onDark ? T.gold : T.goldDeep,
+      name: opts.name ? `${opts.name} · label` : 'EDITOR NOTE · label', role: 'meta',
+    }),
+    text(body, x + 28, y + 58, {
+      style: 'note', color: ink, width: w - 56,
+      name: opts.name ? `${opts.name} · text` : 'EDITOR NOTE · text', role: 'body',
+    }),
+  ];
+}
+
+module.exports = { rect, line, image, scrim, text, group, furniture, titleBlock, dataTable, editorNote };

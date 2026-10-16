@@ -13,9 +13,9 @@ const GEO = path.join(__dirname, '..', 'assets', 'geo', 'irn.json');
 /* Documented growing cities for the Iranian export date varieties.
  * Coordinates are standard decimal lon/lat. */
 const PINS = [
-  { lon: 58.35, lat: 29.10, city: 'Bam', province: 'Kerman', grows: 'Mazafati · Kimri · Medjoul', side: 'right' },
+  { lon: 58.35, lat: 29.10, city: 'Bam', province: 'Kerman', grows: 'Mazafati · Kimri · Medjoul', side: 'right', nudge: [14, 8] },
   { lon: 57.08, lat: 30.28, city: 'Kerman', province: 'Kerman', grows: 'Shahani', side: 'left' },
-  { lon: 57.74, lat: 28.68, city: 'Jiroft & Kahnoj', province: 'Kerman', grows: 'Shahani · Najafi', side: 'right' },
+  { lon: 57.74, lat: 28.68, city: 'Jiroft & Kahnoj', province: 'Kerman', grows: 'Shahani · Najafi', side: 'right', nudge: [-12, 12] },
   { lon: 51.22, lat: 29.27, city: 'Dashtestan & Kazerun', province: 'Fars', grows: 'Zahedi · Lasht · Morki', side: 'left' },
   { lon: 53.56, lat: 28.50, city: 'Jahrom', province: 'Fars', grows: 'Harani', side: 'left' },
   { lon: 55.90, lat: 28.35, city: 'Hajiabad', province: 'Hormozgan', grows: 'Piarom', side: 'right' },
@@ -25,8 +25,11 @@ const PINS = [
 
 function loadOutline() {
   const raw = JSON.parse(fs.readFileSync(GEO, 'utf8'));
-  const g = raw.features ? raw.features[0].geometry : raw.geometry;
-  return g.type === 'MultiPolygon' ? g.coordinates.map((p) => p[0]) : [g.coordinates[0]];
+  const g = raw.features ? raw.features[0].geometry : (raw.geometry || raw); // bare geometry also fine
+  const rings = g.type === 'MultiPolygon' ? g.coordinates.map((p) => p[0]) : [g.coordinates[0]];
+  // keep the largest ring only (mainland), and drop duplicate closing point
+  const main = rings.reduce((a, b) => (b.length > a.length ? b : a), rings[0]);
+  return [main[0][0] === main[main.length - 1][0] && main[0][1] === main[main.length - 1][1] ? main.slice(0, -1) : main];
 }
 
 /** Project lon/lat into the box with a simple equirectangular fit. */
@@ -105,10 +108,12 @@ function mapLabels(box, projectFn) {
   const project = projectFn || makeProjector(box);
   return PINS.map((pin) => {
     const p = project(pin.lon, pin.lat);
+    const nx = pin.nudge ? pin.nudge[0] : 0;
+    const ny = pin.nudge ? pin.nudge[1] : 0;
     return {
       text: pin.city.toUpperCase(),
-      x: pin.side === 'right' ? p.x + 26 : p.x - 26,
-      y: p.y - 16,
+      x: p.x + nx + (pin.side === 'right' ? 26 : -26),
+      y: p.y + ny - 16,
       align: pin.side === 'right' ? 'left' : 'right',
       city: pin.city,
       province: pin.province,

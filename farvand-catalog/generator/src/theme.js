@@ -18,6 +18,8 @@ const FONT_FILES = {
   'Inter-Regular': 'inter/400Regular/Inter_400Regular.ttf',
   'Inter-Medium': 'inter/500Medium/Inter_500Medium.ttf',
   'Inter-SemiBold': 'inter/600SemiBold/Inter_600SemiBold.ttf',
+  'PlayfairDisplay-Italic': 'playfair-display/400Regular_Italic/PlayfairDisplay_400Regular_Italic.ttf',
+  'Inter-Italic': 'inter/400Regular_Italic/Inter_400Regular_Italic.ttf',
 };
 
 let fontsRegistered = false;
@@ -120,7 +122,8 @@ const T_ = {
   cell: { family: 'Inter', ps: 'Inter-Regular', weight: 400, size: 24, lineHeight: 33, tracking: 0 },
   cellStrong: { family: 'Inter', ps: 'Inter-SemiBold', weight: 600, size: 24, lineHeight: 33, tracking: 0 },
   num: { family: 'Playfair Display', ps: 'PlayfairDisplay-Medium', weight: 500, size: 66, lineHeight: 74, tracking: 0 },
-  italic: { family: 'Playfair Display', ps: 'PlayfairDisplay-Regular', weight: 400, size: 26, lineHeight: 38, tracking: 0, italic: true },
+  italic: { family: 'Playfair Display', ps: 'PlayfairDisplay-Italic', weight: 400, size: 26, lineHeight: 38, tracking: 0, italic: true },
+  note: { family: 'Playfair Display', ps: 'PlayfairDisplay-Italic', weight: 400, size: 23, lineHeight: 34, tracking: 0, italic: true },
 };
 
 module.exports = {
