@@ -1,80 +1,101 @@
 import { getDb } from "@/db";
 import { products, reviews } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
+const MAX_BODY_CHARS = 8 * 1024;
+const CONTROL_CHARS = /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/;
+
+function fail(message: string, status = 400, headers?: HeadersInit) {
+  return Response.json({ error: message }, { status, headers });
+}
+
+/** رشته‌ی لازم: بدون بریدن بی‌صدا؛ خارج از بازه یعنی رد. */
+function required(v: unknown, min: number, max: number): string | null {
+  if (typeof v !== "string") return null;
+  const s = v.trim();
+  if (s.length < min || s.length > max || CONTROL_CHARS.test(s)) return null;
+  return s;
+}
+
+/** رشته‌ی اختیاری: خالی => null، بیش‌ازحد/نامعتبر => رد. */
+function optional(v: unknown, max: number): { ok: true; value: string | null } | { ok: false } {
+  if (v == null || (typeof v === "string" && v.trim() === "")) return { ok: true, value: null };
+  const s = required(v, 1, max);
+  return s ? { ok: true, value: s } : { ok: false };
+}
+
 export async function POST(request: Request) {
+  // ۱) محدودیت نرخ: ۵ نظر در ساعت برای هر IP
+  const rl = rateLimit(`review:${clientIp(request)}`, 5, 60 * 60 * 1000);
+  if (!rl.ok) {
+    return fail("Too many reviews. Please try again later.", 429, {
+      "Retry-After": String(rl.retryAfter),
+    });
+  }
+
+  // ۲) محدودیت حجم، قبل از پارس
+  let raw: string;
+  try {
+    raw = await request.text();
+  } catch {
+    return fail("Invalid request body");
+  }
+  if (raw.length > MAX_BODY_CHARS) return fail("Request payload is too large", 413);
+
   let body: Record<string, unknown>;
   try {
-    body = await request.json();
+    body = JSON.parse(raw);
   } catch {
-    return Response.json({ error: "Invalid request body" }, { status: 400 });
+    return fail("Invalid request body");
+  }
+  if (!body || typeof body !== "object") return fail("Invalid request body");
+
+  // ۳) honeypot: به ربات وانمود می‌کنیم موفق بوده، ولی چیزی ذخیره نمی‌کنیم
+  if (typeof body._hp === "string" && body._hp.trim() !== "") {
+    return Response.json({ status: "pending" }, { status: 202 });
   }
 
+  // ۴) اعتبارسنجی؛ هیچ فیلدی بی‌صدا بریده نمی‌شود
   const productId = Number(body.productId);
   const rating = Number(body.rating);
-  const author = typeof body.author === "string" ? body.author.trim() : "";
-  const location = typeof body.location === "string" ? body.location.trim() : "";
-  const title = typeof body.title === "string" ? body.title.trim() : "";
-  const comment = typeof body.comment === "string" ? body.comment.trim() : "";
+  if (!Number.isInteger(productId) || productId <= 0) return fail("Invalid product");
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5)
+    return fail("Rating must be a whole number between 1 and 5");
 
-  if (!Number.isInteger(productId) || productId <= 0) {
-    return Response.json({ error: "Invalid product" }, { status: 400 });
-  }
-  if (!Number.isFinite(rating) || rating < 1 || rating > 5) {
-    return Response.json({ error: "Rating must be between 1 and 5" }, { status: 400 });
-  }
-  if (!author || author.length > 80) {
-    return Response.json({ error: "Please enter your name" }, { status: 400 });
-  }
-  if (!comment || comment.length < 10 || comment.length > 2000) {
-    return Response.json({ error: "Review must be between 10 and 2000 characters" }, { status: 400 });
-  }
+  const author = required(body.author, 1, 80);
+  if (!author) return fail("Please enter your name (up to 80 characters)");
 
+  const comment = required(body.comment, 10, 2000);
+  if (!comment) return fail("Review must be between 10 and 2000 characters");
+
+  const title = optional(body.title, 120);
+  if (!title.ok) return fail("Title must be 120 characters or fewer");
+
+  const location = optional(body.location, 80);
+  if (!location.ok) return fail("City must be 80 characters or fewer");
+
+  // ۵) وجود محصول
   const db = getDb();
-
-  const existing = await db
+  const [product] = await db
     .select({ id: products.id })
     .from(products)
     .where(eq(products.id, productId))
     .limit(1);
+  if (!product) return fail("Product not found", 404);
 
-  if (!existing[0]) {
-    return Response.json({ error: "Product not found" }, { status: 404 });
-  }
+  // ۶) ذخیره به‌صورت pending؛ امتیاز محصول تا زمان تأیید تغییر نمی‌کند
+  await db.insert(reviews).values({
+    productId,
+    author,
+    location: location.value,
+    rating,
+    title: title.value,
+    comment,
+    status: "pending",
+  });
 
-  const [inserted] = await db
-    .insert(reviews)
-    .values({
-      productId,
-      author: author.slice(0, 80),
-      location: location ? location.slice(0, 80) : null,
-      rating: Math.round(rating),
-      title: title ? title.slice(0, 120) : null,
-      comment: comment.slice(0, 2000),
-    })
-    .returning();
-
-  const rows = await db
-    .select({ rating: reviews.rating })
-    .from(reviews)
-    .where(eq(reviews.productId, productId));
-
-  const avg = rows.length
-    ? Math.round((rows.reduce((s, r) => s + r.rating, 0) / rows.length) * 10) / 10
-    : Math.round(rating);
-
-  await db
-    .update(products)
-    .set({ rating: avg, reviewCount: rows.length })
-    .where(eq(products.id, productId));
-
-  return Response.json(
-    {
-      review: { ...inserted, createdAt: inserted.createdAt.toISOString() },
-      product: { rating: avg, reviewCount: rows.length },
-    },
-    { status: 201 }
-  );
+  return Response.json({ status: "pending" }, { status: 202 });
 }
