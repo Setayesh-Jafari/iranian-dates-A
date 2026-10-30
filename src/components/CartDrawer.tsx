@@ -86,6 +86,7 @@ export function CartDrawer() {
               </div>
               <button
                 type="button"
+                autoFocus
                 onClick={closeDrawer}
                 aria-label={dict.common.close}
                 className="grid h-10 w-10 place-items-center rounded-full text-date-600 transition-colors hover:bg-date-900/5"
