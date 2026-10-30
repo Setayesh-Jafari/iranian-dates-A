@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { EASE } from "@/lib/motion";
 import { useI18n } from "@/i18n/I18nProvider";
 import { t } from "@/i18n";
-import { FALLBACK_IMAGE, sanitizeImages } from "@/lib/images";
+import { sanitizeImages } from "@/lib/images";
 
 export function ProductGallery({
   images,
