@@ -21,7 +21,9 @@ async function unusedPort() {
 // Exercise the same standalone server and assets used by the production image.
 await cp(".next/static", ".next/standalone/.next/static", { recursive: true });
 await cp("public", ".next/standalone/public", { recursive: true });
-const ports = [await unusedPort(), await unusedPort(), await unusedPort()];
+const portSet = new Set();
+while (portSet.size < 3) portSet.add(await unusedPort());
+const ports = [...portSet];
 const bases = ports.map((port) => `http://localhost:${port}`);
 const children = [];
 let logs = "";

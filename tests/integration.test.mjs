@@ -41,6 +41,35 @@ await test("production API, SEO, multi-instance safeguards and real browser", as
     const migration = await readFile(new URL("../migrations/001_production_safety.sql", import.meta.url), "utf8");
     await pool.query(migration);
     await pool.query(migration); // additive migration must be re-runnable
+    await t.test("legacy migration preserves records and makes new products private", async () => {
+      const client = await pool.connect();
+      const schema = `migration_${suffix}`; // suffix is generated locally as hexadecimal
+      try {
+        await client.query(`CREATE SCHEMA "${schema}"`);
+        await client.query(`SET search_path TO "${schema}"`);
+        await client.query(`CREATE TABLE products (id integer PRIMARY KEY, slug text NOT NULL, price integer NOT NULL);
+          CREATE TABLE inquiries (id text PRIMARY KEY);
+          CREATE TABLE reviews (id integer PRIMARY KEY);
+          INSERT INTO products (id, slug, price) VALUES (1, 'legacy', 0);
+          INSERT INTO inquiries (id) VALUES ('legacy-inquiry');
+          INSERT INTO reviews (id) VALUES (1)`);
+        await client.query(migration);
+        await client.query(migration);
+        const existing = await client.query("SELECT price, published FROM products WHERE id = 1");
+        assert.deepEqual(existing.rows[0], { price: 0, published: true });
+        assert.equal((await client.query("SELECT count(*)::int AS n FROM inquiries")).rows[0].n, 1);
+        assert.equal((await client.query("SELECT count(*)::int AS n FROM reviews")).rows[0].n, 1);
+        const fresh = await client.query("INSERT INTO products (id, slug, price) VALUES (2, 'new', 0) RETURNING published");
+        assert.equal(fresh.rows[0].published, false);
+        await client.query("INSERT INTO inquiry_submission_keys (key, payload_hash, inquiry_id) VALUES ('key', 'hash', 'legacy-inquiry')");
+        await client.query("DELETE FROM inquiries WHERE id = 'legacy-inquiry'");
+        assert.equal((await client.query("SELECT count(*)::int AS n FROM inquiry_submission_keys")).rows[0].n, 0);
+      } finally {
+        await client.query("SET search_path TO public");
+        await client.query(`DROP SCHEMA IF EXISTS "${schema}" CASCADE`);
+        client.release();
+      }
+    });
     const inserted = await pool.query(`INSERT INTO products
       (slug, name, tagline, description, price, category, origin, weight, unit, rating, images, highlights, featured, published)
       VALUES ($1, 'QA Mazafati', 'QA tagline', 'QA product description', 0, $2, 'Iran', '1 kg', 'per kg', 4.5,
