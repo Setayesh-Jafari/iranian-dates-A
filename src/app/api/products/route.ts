@@ -1,3 +1,4 @@
+import { isLocale } from "@/i18n/config";
 import { getCategoryFacets, getProducts } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -50,11 +51,14 @@ export async function GET(request: Request) {
     return badRequest(`q must be ${MAX_QUERY_LENGTH} characters or fewer`);
   }
 
+  const localeRaw = params.get("locale") || "en";
+  if (!isLocale(localeRaw)) return badRequest("locale must be en or fa");
   const category = params.get("category") || undefined;
+  if (category && category.length > 80) return badRequest("category must be 80 characters or fewer");
 
   try {
     const [products, facets] = await Promise.all([
-      getProducts({ category, q, sort, minRating, limit }),
+      getProducts({ category, q, sort, minRating, limit, locale: localeRaw }),
       getCategoryFacets(),
     ]);
     return Response.json({ products, facets, total: products.length });

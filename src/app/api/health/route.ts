@@ -14,17 +14,30 @@ export async function GET() {
     return degraded();
   }
 
+  if (process.env.NODE_ENV === "production" &&
+      !["x-real-ip", "x-forwarded-for", "cf-connecting-ip"].includes(process.env.RATE_LIMIT_IP_HEADER?.toLowerCase().trim() ?? "")) {
+    return degraded();
+  }
   try {
     const pool = getPool();
     let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      await Promise.race([
-        pool.query("select 1"),
+      const result = await Promise.race([
+        pool.query<{ ready: boolean }>(`SELECT
+          to_regclass('products') IS NOT NULL AND
+          to_regclass('reviews') IS NOT NULL AND
+          to_regclass('inquiries') IS NOT NULL AND
+          to_regclass('product_translations') IS NOT NULL AND
+          to_regclass('rate_limit_buckets') IS NOT NULL AND
+          to_regclass('inquiry_submission_keys') IS NOT NULL AND
+          EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid = to_regclass('products')
+            AND attname = 'published' AND NOT attisdropped) AS ready`),
         new Promise<never>((_, reject) => {
           timer = setTimeout(() => reject(new Error("db-probe-timeout")), DB_PROBE_TIMEOUT_MS);
           timer.unref?.();
         }),
       ]);
+      if (!result.rows[0]?.ready) return degraded();
     } finally {
       if (timer) clearTimeout(timer);
     }

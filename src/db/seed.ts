@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { getDb, getPool } from "./index";
-import { products, reviews } from "./schema";
+import { products, productTranslations, reviews } from "./schema";
+import { PERSIAN_SEED, PERSIAN_HIGHLIGHTS, PERSIAN_PACKS, PERSIAN_PACK_UNITS } from "./seed-translations";
 import { sql } from "drizzle-orm";
 
 /**
@@ -501,6 +502,7 @@ async function main() {
         weight: p.weight,
         unit: p.unit,
         stock: p.stock,
+        published: true,
         featured: p.featured,
         isNew: p.isNew,
         badge: p.badge,
@@ -510,6 +512,16 @@ async function main() {
         reviewCount: list.length,
       })
       .returning({ id: products.id });
+
+    const persian = PERSIAN_SEED[p.slug];
+    if (persian) {
+      await db.insert(productTranslations).values({
+        productId: inserted.id, locale: "fa", ...persian, origin: "ایران",
+        weight: PERSIAN_PACKS[p.weight] ?? p.weight,
+        unit: PERSIAN_PACK_UNITS[p.unit] ?? p.unit,
+        highlights: p.highlights.map((text) => PERSIAN_HIGHLIGHTS[text] ?? text),
+      });
+    }
 
     for (let i = 0; i < list.length; i++) {
       const [author, location, rating, title, comment] = list[i];

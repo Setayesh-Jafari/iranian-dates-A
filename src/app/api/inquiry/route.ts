@@ -1,7 +1,5 @@
-import { getDb } from "@/db";
-import { products, inquiries } from "@/db/schema";
-import { inArray } from "drizzle-orm";
-import { randomUUID } from "node:crypto";
+import { getPool } from "@/db";
+import { createHash, randomUUID } from "node:crypto";
 import {
   FIELD_LIMITS,
   MAX_INQUIRY_ITEMS,
@@ -9,238 +7,170 @@ import {
   MAX_QUANTITY_VALUE,
   MAX_REQUEST_BODY_BYTES,
   QUANTITY_UNITS,
+  normalizeDigits,
   type InquiryUnit,
   type StoredInquiryItem,
 } from "@/lib/inquiry";
 import { notifyNewInquiry } from "@/lib/notify";
+import { rateLimit, rateLimitResponse } from "@/lib/rate-limit";
+import { checkWriteOrigin, readJsonObject } from "@/lib/request";
 
 export const dynamic = "force-dynamic";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-// Digits with optional country code / formatting characters.
 const PHONE_RE = /^\+?[0-9\s\-().]{5,23}$/;
 const UNIT_VALUES = QUANTITY_UNITS.map((u) => u.value) as InquiryUnit[];
 
-function jsonError(message: string, status = 400) {
-  return Response.json({ error: message }, { status });
+function jsonError(message: string, status = 400, code = "INVALID_REQUEST") {
+  return Response.json({ code, error: message }, { status, headers: { "Cache-Control": "no-store" } });
 }
 
 function cleanString(value: unknown, max: number): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
-  if (trimmed.length === 0 || trimmed.length > max) return null;
-  if (/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(trimmed)) return null;
+  if (!trimmed || trimmed.length > max || /[\u0000-\u0008\u000b\u000c\u000e-\u001f]/.test(trimmed)) return null;
   return trimmed;
 }
 
-function cleanOptional(
-  value: unknown,
-  max: number
-): { ok: true; value: string | null } | { ok: false } {
-  if (value == null || (typeof value === "string" && value.trim() === "")) {
-    return { ok: true, value: null };
-  }
+function cleanOptional(value: unknown, max: number): { ok: true; value: string | null } | { ok: false } {
+  if (value == null || (typeof value === "string" && value.trim() === "")) return { ok: true, value: null };
   const cleaned = cleanString(value, max);
   return cleaned ? { ok: true, value: cleaned } : { ok: false };
 }
 
-/**
- * Accepts a number or a numeric string and normalizes it.
- * Returns null when invalid. Guards are technical anti-abuse limits,
- * not business rules (no MOQ is defined anywhere in this application).
- */
 function parseQuantity(value: unknown): number | null {
-  const n =
-    typeof value === "number"
-      ? value
-      : typeof value === "string" && value.trim() !== ""
-        ? Number(value)
-        : NaN;
-  if (!Number.isFinite(n) || Number.isNaN(n)) return null;
-  if (n <= 0) return null;
-  if (n > MAX_QUANTITY_VALUE) return null;
-  // Normalize to at most 2 decimal places.
-  return Math.round(n * 100) / 100;
+  const numericText = typeof value === "string" ? normalizeDigits(value.trim()) : "";
+  const n = typeof value === "number" ? value
+    : /^(?:\d+(?:\.\d*)?|\.\d+)$/.test(numericText) ? Number(numericText) : NaN;
+  // Never round a small positive amount to zero or invent a business MOQ.
+  return Number.isFinite(n) && n > 0 && n <= MAX_QUANTITY_VALUE ? n : null;
 }
 
-type RawItem = {
-  slug?: unknown;
-  quantity?: unknown;
-  unit?: unknown;
-};
-
 export async function POST(request: Request) {
-  // ── Payload size guard before parsing ──
-  let raw: string;
-  try {
-    raw = await request.text();
-  } catch {
-    return jsonError("Invalid request body");
-  }
-  if (raw.length > MAX_REQUEST_BODY_BYTES) {
-    return jsonError("Request payload is too large", 413);
-  }
+  const originError = checkWriteOrigin(request);
+  if (originError) return originError;
+  const limited = rateLimitResponse(await rateLimit(request, "inquiry", 10, 15 * 60_000));
+  if (limited) return limited;
 
-  let body: {
-    items?: RawItem[];
-    customer?: Record<string, unknown>;
-    _hp?: unknown; // honeypot field — must stay empty for real users
-  };
-  try {
-    body = JSON.parse(raw);
-  } catch {
-    return jsonError("Invalid request body");
+  const parsed = await readJsonObject(request, MAX_REQUEST_BODY_BYTES);
+  if (!parsed.ok) return parsed.response;
+  const body = parsed.value;
+  if (body._hp != null && body._hp !== "") return jsonError("Submission could not be processed.");
+
+  const rawCustomer = body.customer;
+  if (!rawCustomer || typeof rawCustomer !== "object" || Array.isArray(rawCustomer)) {
+    return jsonError("Please provide contact details.");
   }
-  body ??= {};
-
-  // ── Honeypot: hidden field legitimate users never fill ──
-  if (
-    typeof body._hp === "string" &&
-    body._hp.trim() !== ""
-  ) {
-    return jsonError("Submission could not be processed");
-  }
-
-  const { items, customer = {} } = body;
-
-  // ── Buyer fields (validated, never silently truncated) ──
+  const customer = rawCustomer as Record<string, unknown>;
   const name = cleanString(customer.name, FIELD_LIMITS.name);
-  if (!name) return jsonError("Please enter your full name");
-
+  if (!name) return jsonError("Please enter your full name.");
   const company = cleanString(customer.company, FIELD_LIMITS.company);
-  if (!company)
-    return jsonError("Please enter your company name");
-
+  if (!company) return jsonError("Please enter your company name.");
   const email = cleanString(customer.email, FIELD_LIMITS.email);
-  if (!email || !EMAIL_RE.test(email))
-    return jsonError("Please enter a valid business email address");
-
-  const phone = cleanString(customer.phone, FIELD_LIMITS.phone);
-  if (!phone || !PHONE_RE.test(phone))
-    return jsonError("Please enter a valid phone / WhatsApp number");
-
+  if (!email || !EMAIL_RE.test(email)) return jsonError("Please enter a valid business email address.");
+  const phoneRaw = cleanString(customer.phone, FIELD_LIMITS.phone);
+  const phone = phoneRaw ? normalizeDigits(phoneRaw) : null;
+  if (!phone || !PHONE_RE.test(phone) || (phone.match(/[0-9]/g)?.length ?? 0) < 5) {
+    return jsonError("Please enter a valid phone / WhatsApp number.");
+  }
   const country = cleanString(customer.country, FIELD_LIMITS.country);
-  if (!country) return jsonError("Please select your country");
-
-  // Optional free-text fields: reject oversized/invalid values instead of truncating.
+  if (!country) return jsonError("Please select your country.");
   const cityResult = cleanOptional(customer.city, FIELD_LIMITS.city);
-  if (!cityResult.ok)
-    return jsonError("Destination is too long or contains invalid characters");
-  const city = cityResult.value;
-
+  if (!cityResult.ok) return jsonError("Destination is too long or contains invalid characters.");
   const messageResult = cleanOptional(customer.message, MAX_MESSAGE_LENGTH);
-  if (!messageResult.ok)
-    return jsonError(`Message must be ${MAX_MESSAGE_LENGTH} characters or fewer`);
-  const message = messageResult.value;
+  if (!messageResult.ok) return jsonError(`Message must be ${MAX_MESSAGE_LENGTH} characters or fewer.`);
 
-  // ── Items: technical cap of MAX_INQUIRY_ITEMS (anti-abuse, not a business rule) ──
-  if (!Array.isArray(items) || items.length === 0) {
-    return jsonError("Please select at least one product");
-  }
-  if (items.length > MAX_INQUIRY_ITEMS) {
-    return jsonError(`An inquiry can include at most ${MAX_INQUIRY_ITEMS} products`);
-  }
-
+  if (!Array.isArray(body.items) || body.items.length === 0) return jsonError("Please select at least one product.");
+  if (body.items.length > MAX_INQUIRY_ITEMS) return jsonError(`An inquiry can include at most ${MAX_INQUIRY_ITEMS} products.`);
   const requested: { slug: string; quantity: number; unit: InquiryUnit }[] = [];
-  const seenSlugs = new Set<string>();
-  for (const item of items) {
-    const slug = cleanString(item?.slug, 120);
-    if (!slug) return jsonError("Each inquiry item needs a product reference");
-    if (seenSlugs.has(slug))
-      return jsonError("Duplicate products in inquiry — please remove duplicates");
-    seenSlugs.add(slug);
-
-    const quantity = parseQuantity(item?.quantity);
-    if (quantity === null) {
-      return jsonError(
-        "Please provide a valid requested quantity for every product (a number greater than zero)"
-      );
+  const seen = new Set<string>();
+  for (const rawItem of body.items) {
+    if (!rawItem || typeof rawItem !== "object" || Array.isArray(rawItem)) return jsonError("Invalid product entry.");
+    const item = rawItem as Record<string, unknown>;
+    const slug = cleanString(item.slug, 120);
+    if (!slug || seen.has(slug)) return jsonError("Invalid or duplicate product reference.");
+    seen.add(slug);
+    const quantity = parseQuantity(item.quantity);
+    if (quantity === null) return jsonError("Provide a valid quantity greater than zero for every product.");
+    if (typeof item.unit !== "string" || !UNIT_VALUES.includes(item.unit as InquiryUnit)) {
+      return jsonError("Invalid quantity unit.");
     }
-
-    const unit = UNIT_VALUES.includes(item?.unit as InquiryUnit)
-      ? (item.unit as InquiryUnit)
-      : "kg";
-
-    requested.push({ slug, quantity, unit });
+    requested.push({ slug, quantity, unit: item.unit as InquiryUnit });
   }
 
-  // ── Product verification: never trust client-supplied names ──
-  let authoritative: Map<string, { id: number; name: string }>;
+  // The client retains this random key when retrying the same payload. Reuse
+  // with different details is rejected instead of overwriting an existing lead.
+  const idempotencyKey = request.headers.get("idempotency-key")?.trim();
+  if (!idempotencyKey || !/^[a-zA-Z0-9_-]{16,128}$/.test(idempotencyKey)) {
+    return jsonError("A valid Idempotency-Key is required.");
+  }
+  const keyHash = createHash("sha256").update(idempotencyKey).digest("hex");
+  const payloadHash = createHash("sha256").update(JSON.stringify({
+    requested, name, company, email, phone, country, city: cityResult.value, message: messageResult.value,
+  })).digest("hex");
+  const inquiryId = `INQ-${randomUUID().toUpperCase()}`;
+  let created = false;
+  let confirmedId = inquiryId;
+
   try {
-    const db = getDb();
-    const rows = await db
-      .select({ id: products.id, slug: products.slug, name: products.name })
-      .from(products)
-      .where(
-        inArray(
-          products.slug,
-          requested.map((r) => r.slug)
-        )
+    const client = await getPool().connect();
+    try {
+      await client.query("BEGIN");
+      // Serialize requests with the same key across instances. The inquiry and
+      // its claim commit together, and the FK removes stale claims on deletion.
+      const lockId = BigInt.asIntN(64, BigInt(`0x${keyHash.slice(0, 16)}`)).toString();
+      await client.query("SELECT pg_advisory_xact_lock($1::bigint)", [lockId]);
+      const previous = await client.query<{ payload_hash: string; inquiry_id: string }>(
+        "SELECT payload_hash, inquiry_id FROM inquiry_submission_keys WHERE key = $1", [keyHash],
       );
-    authoritative = new Map(rows.map((r) => [r.slug, { id: r.id, name: r.name }]));
-  } catch {
-    // Database unavailable — controlled error, no internals exposed.
-    console.error("[inquiry] product verification failed (database unavailable)");
-    return jsonError(
-      "We couldn't verify the selected products right now. Please try again later.",
-      503
-    );
+      if (previous.rows[0]) {
+        if (previous.rows[0].payload_hash !== payloadHash) {
+          await client.query("ROLLBACK");
+          return jsonError("This submission key was already used for different details.", 409, "CONFLICT");
+        }
+        confirmedId = previous.rows[0].inquiry_id;
+      } else {
+        const rows = await client.query<{ id: number; slug: string; name: string }>(
+          "SELECT id, slug, name FROM products WHERE published = true AND slug = ANY($1::text[])",
+          [requested.map((item) => item.slug)],
+        );
+        const authoritative = new Map(rows.rows.map((row) => [row.slug, row]));
+        if (requested.some((item) => !authoritative.has(item.slug))) {
+          await client.query("ROLLBACK");
+          return jsonError("One or more selected products could not be verified.");
+        }
+        const storedItems: StoredInquiryItem[] = requested.map((item) => {
+          const product = authoritative.get(item.slug)!;
+          return { productId: product.id, name: product.name, ...item };
+        });
+        await client.query(
+          `INSERT INTO inquiries (id, name, email, phone, company, country, city, message, items, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb, 'new')`,
+          [inquiryId, name, email, phone, company, country, cityResult.value, messageResult.value, JSON.stringify(storedItems)],
+        );
+        await client.query(
+          "INSERT INTO inquiry_submission_keys (key, payload_hash, inquiry_id) VALUES ($1, $2, $3)",
+          [keyHash, payloadHash, inquiryId],
+        );
+        created = true;
+      }
+      await client.query("COMMIT");
+    } catch (error) {
+      await client.query("ROLLBACK").catch(() => {});
+      throw error;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error("[inquiry] could not confirm submission:", error instanceof Error ? error.constructor.name : "unknown error");
+    // If the connection failed during COMMIT its outcome can be uncertain. A
+    // retry using the same key safely recovers the original reference.
+    return jsonError("We could not confirm your inquiry. Please retry with the same details.", 503, "UNAVAILABLE");
   }
 
-  const missing = requested.filter((r) => !authoritative.has(r.slug));
-  if (missing.length > 0) {
-    return jsonError(
-      "One or more selected products could not be verified. Please refresh the page and try again."
-    );
-  }
-
-  const storedItems: StoredInquiryItem[] = requested.map((r) => {
-    const source = authoritative.get(r.slug)!;
-    return {
-      productId: source.id,
-      name: source.name,
-      slug: r.slug,
-      quantity: r.quantity,
-      unit: r.unit,
-    };
+  if (created) await notifyNewInquiry({ inquiryId, itemCount: requested.length, country });
+  return Response.json({ inquiryId: confirmedId }, {
+    status: created ? 201 : 200,
+    headers: { "Cache-Control": "no-store" },
   });
-
-  // ── Persist first; success is reported only after the row exists ──
-  const inquiryId = `INQ-${randomUUID().slice(0, 8).toUpperCase()}`;
-
-  try {
-    const db = getDb();
-    await db.insert(inquiries).values({
-      id: inquiryId,
-      name,
-      email,
-      phone,
-      company,
-      country,
-      city,
-      message,
-      items: storedItems,
-      status: "new",
-    });
-  } catch (err) {
-    // Log the reference + error class only — no PII, no connection details.
-    console.error(
-      `[inquiry] insert failed for ${inquiryId}:`,
-      err instanceof Error ? err.constructor.name : "unknown error"
-    );
-    return jsonError(
-      "We couldn't submit your inquiry right now. Your details were not saved — please try again.",
-      500
-    );
-  }
-
-  // Best-effort team notification (no-op unless INQUIRY_WEBHOOK_URL is set).
-  // Never blocks or fails the buyer's request.
-  await notifyNewInquiry({
-    inquiryId,
-    itemCount: storedItems.length,
-    country,
-  });
-
-  return Response.json({ inquiryId }, { status: 201 });
 }

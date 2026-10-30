@@ -30,13 +30,14 @@ export type Product = {
   unit: string;
   rating: number;
   reviewCount: number;
-  stock: number;
   featured: boolean;
   isNew: boolean;
   badge: string | null;
   images: string[];
   highlights: string[];
   createdAt: string;
+  /** Language of owner-supplied catalog text, or English fallback. */
+  contentLocale: string;
 };
 
 export type Review = {

@@ -33,6 +33,8 @@ export function getPool(): Pool {
     connectionString: databaseUrl,
     max: 10, // upper bound of simultaneous connections from this process
     idleTimeoutMillis: 30_000, // close connections idle for 30 s
+    statement_timeout: 10_000, // cap expensive queries and lock waits
+    query_timeout: 12_000, // bound client-side waits as well
     connectionTimeoutMillis: 5_000, // fail fast instead of waiting forever for a connection
   });
 
@@ -48,9 +50,9 @@ export function getPool(): Pool {
   });
 
   modulePool = pool;
-  if (process.env.NODE_ENV !== "production") {
-    globalForDb.__arenaNextJsPostgresqlPool = pool;
-  }
+  // Route bundles in the same Node process must share a single bounded pool
+  // in production as well as during development/HMR.
+  globalForDb.__arenaNextJsPostgresqlPool = pool;
   return pool;
 }
 

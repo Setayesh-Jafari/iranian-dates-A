@@ -73,7 +73,7 @@ async function main() {
 
 main()
   .catch((err) => {
-    console.error(err instanceof Error ? err.message : err);
+    console.error("Review moderation failed:", err instanceof Error ? err.constructor.name : "unknown error");
     process.exitCode = 1;
   })
   .finally(async () => {

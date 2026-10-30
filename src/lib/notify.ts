@@ -13,8 +13,9 @@
  * will be POSTed to it, best-effort.
  *
  * Safety rules:
- *  - Delivery NEVER blocks or fails the buyer's request: persistence has
+ *  - Delivery never turns a saved inquiry into a failure: persistence has
  *    already succeeded; a webhook error is logged server-side only.
+ *  - The request may wait up to five seconds for the delivery attempt.
  *  - The payload deliberately contains NO direct PII (no email, phone or
  *    free-text message) — just the inquiry reference and non-sensitive
  *    counts so the team can pull the full record from the database.
@@ -44,6 +45,7 @@ export async function notifyNewInquiry(
       body: JSON.stringify(notification),
       signal: AbortSignal.timeout(5000),
       cache: "no-store",
+      redirect: "error",
     });
     if (!res.ok) {
       console.error(
