@@ -10,6 +10,29 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  headers: () => [
+    {
+      source: "/:path*",
+      headers: [
+        { key: "X-Content-Type-Options", value: "nosniff" },
+        { key: "X-Frame-Options", value: "DENY" },
+        { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+        {
+          key: "Permissions-Policy",
+          value: "geolocation=(), microphone=(), camera=(), payment=()",
+        },
+        // Strict-Transport-Security only if NEXT_PUBLIC_SITE_URL is HTTPS (production check)
+        ...(process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://")
+          ? [
+              {
+                key: "Strict-Transport-Security",
+                value: "max-age=31536000; includeSubDomains; preload",
+              },
+            ]
+          : []),
+      ],
+    },
+  ],
 };
 
 export default nextConfig;
