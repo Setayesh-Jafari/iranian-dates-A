@@ -305,6 +305,7 @@ export function ProductFilters({
                 </h3>
                 <button
                   type="button"
+                  autoFocus
                   onClick={() => setOpen(false)}
                   aria-label={dict.common.closeFilters}
                   className="grid h-9 w-9 place-items-center rounded-full text-date-600 hover:bg-cream-100"
