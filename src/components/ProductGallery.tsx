@@ -7,11 +7,7 @@ import { cn } from "@/lib/utils";
 import { EASE } from "@/lib/motion";
 import { useI18n } from "@/i18n/I18nProvider";
 import { t } from "@/i18n";
-
-// Neutral fallback used only when a product has no images attached.
-// NOTE: placeholder imagery — not verified product photography.
-const FALLBACK_IMAGE =
-  "https://images.pexels.com/photos/15913423/pexels-photo-15913423.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1200&h=900";
+import { sanitizeImages } from "@/lib/images";
 
 export function ProductGallery({
   images,
@@ -22,7 +18,9 @@ export function ProductGallery({
 }) {
   const { dict } = useI18n();
   const [active, setActive] = useState(0);
-  const imgs = images.length ? images : [FALLBACK_IMAGE];
+  // Filter out blank entries and guarantee at least one image so <Image>
+  // never receives an empty src.
+  const imgs = sanitizeImages(images);
 
   return (
     <div className="flex flex-col gap-4">

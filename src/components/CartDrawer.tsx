@@ -9,6 +9,7 @@ import { useInquiry, inquiryCount } from "@/store/cart";
 import { EASE } from "@/lib/motion";
 import { useI18n } from "@/i18n/I18nProvider";
 import { t, unitLabel } from "@/i18n";
+import { firstImage } from "@/lib/images";
 
 export function CartDrawer() {
   const { dict, dir, href } = useI18n();
@@ -126,7 +127,7 @@ export function CartDrawer() {
                     >
                       <div className="relative h-14 w-12 shrink-0 overflow-hidden rounded-lg bg-cream-200">
                         <Image
-                          src={item.image}
+                          src={firstImage([item.image])}
                           alt={item.name}
                           fill
                           sizes="48px"
