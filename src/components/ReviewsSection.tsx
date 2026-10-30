@@ -141,7 +141,7 @@ export function ReviewsSection({
             aria-hidden="true"
             value={hp}
             onChange={(e) => setHp(e.target.value)}
-            className="pointer-events-none absolute -left-[9999px] top-auto h-px w-px overflow-hidden opacity-0"
+            className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0"
           />
           <h4 className="font-display text-lg font-semibold text-date-900">
             {dict.reviews.writeReview}

@@ -1,420 +1,445 @@
-import Link from "next/link";
+"use client";
+
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import Link from "next/link";
+import { useState } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
-  BadgeCheck,
-  Boxes,
+  Check,
   ClipboardList,
-  FileText,
-  FlaskConical,
-  Globe,
-  Leaf,
-  Send,
+  Loader2,
+  ShieldCheck,
   Truck,
 } from "lucide-react";
-import { getProductBySlug, getProducts } from "@/lib/queries";
-import { ProductCard } from "@/components/ProductCard";
-import { AddToInquiryButton } from "@/components/AddToCartButton";
-import { Reveal } from "@/components/Reveal";
-import { SectionHeading } from "@/components/SectionHeading";
-import { CATEGORIES } from "@/lib/types";
-import { getDictionary, categoryLabel, categoryShort } from "@/i18n";
+import { useInquiry } from "@/store/cart";
 import {
-  dir as dirOf,
-  isLocale,
-  localePath,
-  type Locale,
-} from "@/i18n/config";
+  INQUIRY_COUNTRIES,
+  MAX_MESSAGE_LENGTH,
+  QUANTITY_UNITS,
+  type InquiryUnit,
+} from "@/lib/inquiry";
+import { useI18n } from "@/i18n/I18nProvider";
+import { countryLabel, t, unitLabel } from "@/i18n";
 
-export const dynamic = "force-dynamic";
+const COUNTRIES = INQUIRY_COUNTRIES;
 
-// NOTE (content policy): imagery below is licensed stock photography used as a
-// placeholder. It is NOT verified company/product photography and must not be
-// presented as such until the business provides its own images.
-const px = (id: number) =>
-  `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1200&h=900`;
+const inputClass =
+  "mt-1.5 w-full rounded-xl border border-date-900/12 bg-cream-50 px-3.5 py-2.5 text-sm text-date-900 placeholder:text-date-400 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20";
 
-function resolveLocale(raw: string): Locale | null {
-  return isLocale(raw) ? raw : null;
+function Field({
+  label,
+  required,
+  children,
+  className,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <label className={className}>
+      <span className="text-xs font-semibold uppercase tracking-wide text-date-500">
+        {label} {required && <span className="text-gold-600">*</span>}
+      </span>
+      {children}
+    </label>
+  );
 }
 
-export default async function HomePage({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
-  const { locale: raw } = await params;
-  const locale = resolveLocale(raw);
-  if (!locale) notFound();
+/** Client-side convenience check; the server validates again authoritatively. */
+function isValidQuantity(value: string | undefined): boolean {
+  if (!value || value.trim() === "") return false;
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0;
+}
 
-  const dict = getDictionary(locale);
-  const rtl = dirOf(locale) === "rtl";
-  const flip = rtl ? "rotate-180" : undefined;
-  const gradientX = rtl ? "bg-gradient-to-l" : "bg-gradient-to-r";
+export default function InquiryPage() {
+  const { dict, dir, href } = useI18n();
+  const items = useInquiry((s) => s.items);
+  const updateItem = useInquiry((s) => s.updateItem);
+  const clear = useInquiry((s) => s.clear);
+  const [status, setStatus] = useState<"form" | "submitting" | "submitted">(
+    "form",
+  );
+  const [inquiryId, setInquiryId] = useState("");
+  const [error, setError] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    country: "",
+    city: "",
+    message: "",
+  });
+  // Honeypot — visually hidden and never filled by real users. Bots that
+  // auto-populate it get rejected server-side (no lead is stored).
+  const [hp, setHp] = useState("");
 
-  const MARQUEE = dict.home.marquee;
+  const flip = dir === "rtl" ? "rotate-180" : undefined;
+  const noun =
+    items.length === 1 ? dict.common.productOne : dict.common.productMany;
 
-  const COLLECTIONS = [
-    { slug: "premium", image: px(15913423) },
-    { slug: "gifts", image: px(6200512) },
-    { slug: "wholesale", image: px(17302469) },
-    { slug: "products", image: px(11771949) },
-    { slug: "soft", image: px(11679690) },
-    { slug: "dry", image: px(15707374) },
-  ];
+  function set<K extends keyof typeof form>(key: K, value: string) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
 
-  const HOW_IT_WORKS = dict.home.howSteps.map((step, i) => ({
-    ...step,
-    icon: [ClipboardList, FileText, Send][i] ?? ClipboardList,
-  }));
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (status !== "form") return; // double-submission guard
+    if (items.length === 0) {
+      setError(dict.inquiry.errorEmptyList);
+      return;
+    }
+    if (items.some((i) => !isValidQuantity(i.quantity))) {
+      setError(dict.inquiry.errorQuantity);
+      return;
+    }
+    setStatus("submitting");
+    setError("");
+    try {
+      const res = await fetch("/api/inquiry", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: items.map((i) => ({
+            slug: i.slug,
+            quantity: Number(i.quantity),
+            unit: i.unit ?? "kg",
+          })),
+          customer: form,
+          _hp: hp,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        inquiryId?: string;
+      };
+      if (!res.ok)
+        throw new Error(data.error || dict.inquiry.errorGeneric);
+      setInquiryId(data.inquiryId ?? "");
+      setStatus("submitted");
+      clear();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : dict.inquiry.errorGeneric,
+      );
+      setStatus("form");
+    }
+  }
 
-  const ON_REQUEST_CHIPS = [
-    {
-      icon: Boxes,
-      value: dict.common.onRequest,
-      label: dict.home.chipOriginGrading,
-    },
-    {
-      icon: FlaskConical,
-      value: dict.common.onRequest,
-      label: dict.home.chipSpecifications,
-    },
-    {
-      icon: Truck,
-      value: dict.common.perOrder,
-      label: dict.home.chipShipping,
-    },
-    {
-      icon: Globe,
-      value: String(CATEGORIES.length),
-      label: dict.home.chipCollections,
-    },
-  ];
+  // Success state
+  if (status === "submitted" && inquiryId) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-20 sm:px-6">
+        <div className="rounded-3xl border border-date-900/10 bg-white p-8 text-center sm:p-12">
+          <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+            <Check size={30} strokeWidth={2.5} />
+          </div>
+          <h1 className="mt-6 font-display text-3xl font-semibold text-date-900">
+            {dict.inquiry.successTitle}
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-date-600">
+            {t(dict.inquiry.successBody, { id: inquiryId })}
+          </p>
 
-  const [featured, flagship] = await Promise.all([
-    getProducts({ sort: "featured", limit: 8 }),
-    getProductBySlug("mazafati-kimia-dates"),
-  ]);
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href={href("/products")}
+              className="inline-flex items-center gap-2 rounded-full bg-date-900 px-7 py-3.5 text-sm font-semibold text-cream-50 transition-colors hover:bg-date-800"
+            >
+              {dict.common.continueBrowsing}
+              <ArrowRight size={16} className={flip} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
+  // Empty state
+  if (items.length === 0 && status === "form") {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-24 text-center sm:px-6">
+        <div className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-cream-200 text-date-400">
+          <ClipboardList size={28} strokeWidth={1.5} />
+        </div>
+        <h1 className="mt-6 font-display text-3xl font-semibold text-date-900">
+          {dict.inquiry.emptyTitle}
+        </h1>
+        <p className="mt-3 text-sm text-date-600">{dict.inquiry.emptyText}</p>
+        <Link
+          href={href("/products")}
+          className="mt-8 inline-flex items-center gap-2 rounded-full bg-date-900 px-7 py-3.5 text-sm font-semibold text-cream-50 transition-colors hover:bg-date-800"
+        >
+          {dict.common.browseProducts}
+          <ArrowRight size={16} className={flip} />
+        </Link>
+      </div>
+    );
+  }
+
+  // Form
   return (
-    <div>
-      {/* HERO */}
-      <section className="relative -mt-16 min-h-[92vh] w-full overflow-hidden bg-date-950 lg:-mt-[76px]">
-        <Image
-          src={px(15913423)}
-          alt={dict.home.heroAlt}
-          fill
-          priority
-          className="object-cover"
-        />
-        <div
-          className={`absolute inset-0 ${gradientX} from-date-950/95 via-date-950/70 to-date-950/25`}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-date-950/80 via-transparent to-date-950/40" />
-
-        <div className="relative mx-auto flex min-h-[92vh] max-w-7xl flex-col justify-center px-4 pt-24 sm:px-6 lg:px-8">
-          <div className="max-w-2xl">
-            <p className="animate-fade-up inline-flex items-center gap-2 rounded-full border border-gold-400/30 bg-gold-500/10 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-gold-300 backdrop-blur">
-              <Leaf size={13} /> {dict.home.heroBadge}
-            </p>
-
-            <h1
-              className="animate-fade-up mt-6 font-display text-[2.7rem] font-semibold leading-[1.03] tracking-tight text-cream-50 text-balance sm:text-6xl lg:text-7xl"
-              style={{ animationDelay: "80ms" }}
-            >
-              {dict.home.heroTitleA}{" "}
-              <span className="italic text-gold-300">
-                {dict.home.heroTitleB}
-              </span>
-            </h1>
-
-            <p
-              className="animate-fade-up mt-6 max-w-xl text-base leading-relaxed text-cream-100/80 sm:text-lg"
-              style={{ animationDelay: "160ms" }}
-            >
-              {dict.home.heroText}
-            </p>
-
-            <div
-              className="animate-fade-up mt-9 flex flex-wrap items-center gap-3"
-              style={{ animationDelay: "240ms" }}
-            >
-              <Link
-                href={localePath(locale, "/inquiry")}
-                className="inline-flex items-center gap-2 rounded-full bg-gold-500 px-7 py-3.5 text-sm font-semibold text-date-950 transition-colors hover:bg-gold-400"
-              >
-                {dict.home.heroCtaPrimary}
-                <ArrowRight size={16} className={flip} />
-              </Link>
-              <Link
-                href={localePath(locale, "/products")}
-                className="inline-flex items-center gap-2 rounded-full border border-cream-50/25 px-7 py-3.5 text-sm font-semibold text-cream-50 transition-colors hover:border-cream-50/60 hover:bg-cream-50/5"
-              >
-                {dict.home.heroCtaSecondary}
-              </Link>
-            </div>
-
-            <div
-              className="animate-fade-up mt-10 flex flex-wrap items-center gap-x-7 gap-y-3 text-sm text-cream-100/75"
-              style={{ animationDelay: "320ms" }}
-            >
-              <span className="flex items-center gap-2">
-                <BadgeCheck size={16} className="text-gold-400" />{" "}
-                {dict.home.heroPoint1}
-              </span>
-              <span className="flex items-center gap-2">
-                <BadgeCheck size={16} className="text-gold-400" />{" "}
-                {dict.home.heroPoint2}
-              </span>
-            </div>
-          </div>
+    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-gold-600">
+            <ClipboardList size={13} /> {dict.inquiry.eyebrow}
+          </p>
+          <h1 className="mt-2 font-display text-3xl font-semibold text-date-900 sm:text-4xl">
+            {dict.inquiry.title}
+          </h1>
+          <p className="mt-2 text-sm text-date-500">{dict.inquiry.subtitle}</p>
         </div>
-      </section>
+        <Link
+          href={href("/products")}
+          className="inline-flex items-center gap-2 text-sm font-medium text-date-600 transition-colors hover:text-date-900"
+        >
+          <ArrowLeft size={16} className={flip} />
+          {dict.inquiry.continueBrowsing}
+        </Link>
+      </div>
 
-      {/* MARQUEE */}
-      <section className="border-y border-date-900/10 bg-cream-100 py-4">
-        <div className="flex overflow-hidden">
-          <div className="flex shrink-0 animate-marquee items-center gap-10 pe-10">
-            {[...MARQUEE, ...MARQUEE].map((item, i) => (
-              <span
-                key={i}
-                className="flex items-center gap-10 whitespace-nowrap text-sm font-medium uppercase tracking-[0.18em] text-date-600"
-              >
-                {item} <span className="text-gold-500">✦</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
+      <form
+        onSubmit={submit}
+        className="grid gap-10 lg:grid-cols-[1fr_400px] lg:items-start"
+      >
+        {/* Anti-spam honeypot: real users never see or fill this field. */}
+        <input
+          type="text"
+          name="_hp"
+          tabIndex={-1}
+          autoComplete="off"
+          aria-hidden="true"
+          value={hp}
+          onChange={(e) => setHp(e.target.value)}
+          className="pointer-events-none absolute h-px w-px overflow-hidden opacity-0"
+        />
+        {/* Form fields */}
+        <div className="space-y-8">
+          <section className="rounded-3xl border border-date-900/10 bg-white p-6 sm:p-8">
+            <h2 className="font-display text-lg font-semibold text-date-900">
+              {dict.inquiry.contactDetails}
+            </h2>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <Field label={dict.inquiry.fullName} required>
+                <input
+                  required
+                  value={form.name}
+                  onChange={(e) => set("name", e.target.value)}
+                  placeholder={dict.inquiry.fullNamePlaceholder}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label={dict.inquiry.companyName} required>
+                <input
+                  required
+                  value={form.company}
+                  onChange={(e) => set("company", e.target.value)}
+                  placeholder={dict.inquiry.companyNamePlaceholder}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label={dict.inquiry.businessEmail} required>
+                <input
+                  type="email"
+                  required
+                  value={form.email}
+                  onChange={(e) => set("email", e.target.value)}
+                  placeholder={dict.inquiry.businessEmailPlaceholder}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label={dict.inquiry.phone} required>
+                <input
+                  type="tel"
+                  required
+                  value={form.phone}
+                  onChange={(e) => set("phone", e.target.value)}
+                  placeholder={dict.inquiry.phonePlaceholder}
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+          </section>
 
-      {/* COLLECTIONS */}
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
-        <Reveal>
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <SectionHeading
-              eyebrow={dict.home.collectionsEyebrow}
-              title={dict.home.collectionsTitle}
-              description={dict.home.collectionsText}
-            />
-            <Link
-              href={localePath(locale, "/products")}
-              className="hidden items-center gap-2 text-sm font-semibold text-gold-700 transition-colors hover:text-gold-600 sm:inline-flex"
-            >
-              {dict.common.viewAll}
-              <ArrowRight size={16} className={flip} />
-            </Link>
-          </div>
-        </Reveal>
-
-        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {COLLECTIONS.map((c, i) => {
-            const label = categoryLabel(dict, c.slug);
-            return (
-              <Reveal key={c.slug} delay={i * 0.05}>
-                <Link
-                  href={localePath(locale, `/products?category=${c.slug}`)}
-                  className="group relative block aspect-[4/3] overflow-hidden rounded-3xl bg-date-900"
+          <section className="rounded-3xl border border-date-900/10 bg-white p-6 sm:p-8">
+            <h2 className="font-display text-lg font-semibold text-date-900">
+              {dict.inquiry.shippingDestination}
+            </h2>
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <Field label={dict.inquiry.country} required>
+                <select
+                  required
+                  value={form.country}
+                  onChange={(e) => set("country", e.target.value)}
+                  className={inputClass}
                 >
-                  <Image
-                    src={c.image}
-                    alt={label}
-                    fill
-                    sizes="(min-width:1024px) 33vw, (min-width:640px) 50vw, 100vw"
-                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-date-950/85 via-date-950/25 to-transparent" />
-                  <div className="absolute inset-x-0 bottom-0 p-6">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-300">
-                      {categoryShort(dict, c.slug)}
-                    </p>
-                    <div className="mt-1.5 flex items-center justify-between">
-                      <h3 className="font-display text-2xl font-semibold text-cream-50">
-                        {label}
-                      </h3>
-                      <span className="grid h-9 w-9 place-items-center rounded-full bg-cream-50/10 text-cream-50 backdrop-blur transition-all duration-300 group-hover:bg-gold-500 group-hover:text-date-950">
-                        <ArrowRight size={16} className={flip} />
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              </Reveal>
-            );
-          })}
-        </div>
-      </section>
+                  <option value="" disabled>
+                    {dict.inquiry.selectCountry}
+                  </option>
+                  {COUNTRIES.map((c) => (
+                    <option key={c} value={c}>
+                      {countryLabel(dict, c)}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label={dict.inquiry.city}>
+                <input
+                  value={form.city}
+                  onChange={(e) => set("city", e.target.value)}
+                  placeholder={dict.inquiry.cityPlaceholder}
+                  maxLength={120}
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+          </section>
 
-      {/* FLAGSHIP */}
-      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 sm:pb-24 lg:px-8">
-        <div className="grid items-center gap-10 rounded-[2rem] bg-gradient-to-br from-date-900 to-date-950 p-6 sm:p-10 lg:grid-cols-2 lg:gap-16 lg:p-16">
-          <Reveal>
-            <div className="relative aspect-[4/5] overflow-hidden rounded-3xl sm:aspect-square">
-              <Image
-                src={px(15913411)}
-                alt={dict.home.flagshipAlt}
-                fill
-                sizes="(min-width:1024px) 50vw, 100vw"
-                className="object-cover"
+          <section className="rounded-3xl border border-date-900/10 bg-white p-6 sm:p-8">
+            <h2 className="font-display text-lg font-semibold text-date-900">
+              {dict.inquiry.additionalRequirements}
+            </h2>
+            <div className="mt-5">
+              <Field label={dict.inquiry.message}>
+                <textarea
+                  rows={4}
+                  value={form.message}
+                  onChange={(e) => set("message", e.target.value)}
+                  maxLength={MAX_MESSAGE_LENGTH}
+                  placeholder={dict.inquiry.messagePlaceholder}
+                  className={`${inputClass} resize-none`}
+                />
+              </Field>
+            </div>
+          </section>
+
+          <section className="rounded-3xl border border-date-900/10 bg-white p-6 sm:p-8">
+            <h2 className="font-display text-lg font-semibold text-date-900">
+              {dict.inquiry.paymentTerms}
+            </h2>
+            <div className="mt-5 flex items-start gap-3 rounded-2xl bg-cream-100 p-5">
+              <ShieldCheck
+                size={20}
+                className="mt-0.5 shrink-0 text-gold-600"
               />
-              <div className="absolute start-5 top-5 rounded-full bg-gold-500 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-wider text-date-950 shadow-lg">
-                {dict.home.signature}
-              </div>
-            </div>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-gold-400">
-                {dict.home.flagshipEyebrow}
-              </p>
-              <h2 className="mt-3 font-display text-4xl font-semibold leading-[1.05] tracking-tight text-cream-50 sm:text-5xl">
-                {dict.home.flagshipTitle}
-              </h2>
-              <p className="mt-5 max-w-lg text-base leading-relaxed text-cream-100/70">
-                {dict.home.flagshipText}
-              </p>
-
-              {flagship && (
-                <>
-                  <ul className="mt-7 grid gap-3 sm:grid-cols-2">
-                    {flagship.highlights.slice(0, 4).map((h) => (
-                      <li
-                        key={h}
-                        className="flex items-start gap-2.5 text-sm text-cream-100/80"
-                      >
-                        <BadgeCheck
-                          size={16}
-                          className="mt-0.5 shrink-0 text-gold-400"
-                        />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-8 flex flex-wrap items-center gap-5">
-                    <AddToInquiryButton
-                      product={flagship}
-                      className="bg-gold-500 text-date-950 hover:bg-gold-400"
-                    />
-                    <Link
-                      href={localePath(locale, `/products/${flagship.slug}`)}
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-gold-300 transition-colors hover:text-gold-200"
-                    >
-                      {dict.home.fullDetails}
-                      <ArrowRight size={16} className={flip} />
-                    </Link>
-                  </div>
-                </>
-              )}
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* FEATURED PRODUCTS */}
-      <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 sm:pb-24 lg:px-8">
-        <Reveal>
-          <div className="flex flex-wrap items-end justify-between gap-6">
-            <SectionHeading
-              eyebrow={dict.home.featuredEyebrow}
-              title={dict.home.featuredTitle}
-              description={dict.home.featuredText}
-            />
-            <Link
-              href={localePath(locale, "/products")}
-              className="inline-flex items-center gap-2 text-sm font-semibold text-gold-700 transition-colors hover:text-gold-600"
-            >
-              {dict.common.browseAllProducts}
-              <ArrowRight size={16} className={flip} />
-            </Link>
-          </div>
-        </Reveal>
-
-        <div className="mt-12 grid grid-cols-2 gap-x-4 gap-y-10 md:grid-cols-3 lg:grid-cols-4 lg:gap-x-6">
-          {featured.map((p, i) => (
-            <Reveal key={p.id} delay={(i % 4) * 0.05}>
-              <ProductCard product={p} priority={i < 4} />
-            </Reveal>
-          ))}
-        </div>
-      </section>
-
-      {/* STORY / SOURCING */}
-      <section id="story" className="bg-date-950 text-cream-50">
-        <div className="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 sm:py-24 lg:grid-cols-2 lg:gap-20 lg:px-8">
-          <Reveal>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl">
-              <Image
-                src={px(20106286)}
-                alt={dict.home.storyAlt}
-                fill
-                sizes="(min-width:1024px) 50vw, 100vw"
-                className="object-cover"
-              />
-            </div>
-          </Reveal>
-
-          <Reveal delay={0.1}>
-            <div>
-              <SectionHeading
-                tone="light"
-                eyebrow={dict.home.storyEyebrow}
-                title={dict.home.storyTitle}
-                description={dict.home.storyText}
-              />
-
-              <div className="mt-10 grid grid-cols-2 gap-6 sm:grid-cols-4">
-                {ON_REQUEST_CHIPS.map((s) => (
-                  <div key={s.label}>
-                    <s.icon size={20} className="text-gold-400" />
-                    <p className="mt-3 font-display text-2xl font-semibold text-cream-50">
-                      {s.value}
-                    </p>
-                    <p className="mt-1 text-xs leading-snug text-cream-100/60">
-                      {s.label}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              <Link
-                href={localePath(locale, "/inquiry")}
-                className="mt-10 inline-flex items-center gap-2 rounded-full border border-gold-500/40 px-6 py-3 text-sm font-semibold text-gold-300 transition-colors hover:bg-gold-500/10"
-              >
-                {dict.common.contactTeam}
-                <ArrowRight size={16} className={flip} />
-              </Link>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section className="mx-auto max-w-7xl px-4 py-20 sm:px-6 sm:py-24 lg:px-8">
-        <Reveal>
-          <SectionHeading
-            align="center"
-            eyebrow={dict.home.howEyebrow}
-            title={dict.home.howTitle}
-          />
-        </Reveal>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {HOW_IT_WORKS.map((t, i) => (
-            <Reveal key={t.title} delay={i * 0.08}>
-              <div className="flex h-full flex-col rounded-3xl border border-date-900/10 bg-white p-7">
-                <div className="grid h-11 w-11 place-items-center rounded-2xl bg-gold-100">
-                  <t.icon size={20} className="text-gold-700" />
-                </div>
-                <h3 className="mt-5 font-display text-lg font-semibold text-date-900">
-                  {t.title}
-                </h3>
-                <p className="mt-2 flex-1 text-sm leading-relaxed text-date-600">
-                  {t.text}
+              <div className="text-sm leading-relaxed text-date-600">
+                <p className="font-medium text-date-900">
+                  {dict.inquiry.termsTitle}
+                </p>
+                <p className="mt-2">{dict.inquiry.termsBody1}</p>
+                <p className="mt-2 text-xs text-date-500">
+                  {dict.inquiry.termsBody2}
                 </p>
               </div>
-            </Reveal>
-          ))}
+            </div>
+          </section>
         </div>
-      </section>
+
+        {/* Summary sidebar */}
+        <aside className="lg:sticky lg:top-24">
+          <div className="rounded-3xl border border-date-900/10 bg-white p-6">
+            <h2 className="font-display text-lg font-semibold text-date-900">
+              {dict.inquiry.selectedProducts}
+            </h2>
+            <p className="mt-1 text-xs text-date-500">
+              {dict.inquiry.quantityHint}
+            </p>
+            <ul className="mt-4 space-y-4">
+              {items.map((i) => (
+                <li key={i.id} className="flex items-start gap-3">
+                  <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-lg bg-cream-200">
+                    <Image
+                      src={i.image}
+                      alt={i.name}
+                      fill
+                      sizes="40px"
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-date-900">
+                      {i.name}
+                    </p>
+                    <div className="mt-2 flex items-center gap-2">
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min="1"
+                        step="any"
+                        aria-label={t(dict.inquiry.quantityAria, {
+                          name: i.name,
+                        })}
+                        placeholder={dict.inquiry.quantityPlaceholder}
+                        value={i.quantity ?? ""}
+                        onChange={(e) =>
+                          updateItem(i.id, { quantity: e.target.value })
+                        }
+                        className="w-24 rounded-lg border border-date-900/12 bg-cream-50 px-2.5 py-1.5 text-sm text-date-900 placeholder:text-date-400 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20"
+                      />
+                      <select
+                        aria-label={t(dict.inquiry.unitAria, { name: i.name })}
+                        value={i.unit ?? "kg"}
+                        onChange={(e) =>
+                          updateItem(i.id, {
+                            unit: e.target.value as InquiryUnit,
+                          })
+                        }
+                        className="rounded-lg border border-date-900/12 bg-cream-50 px-2 py-1.5 text-sm text-date-900 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20"
+                      >
+                        {QUANTITY_UNITS.map((u) => (
+                          <option key={u.value} value={u.value}>
+                            {unitLabel(dict, u.value)}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <p className="text-xs text-date-500">
+                      {i.weight} · {i.origin}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <div className="mt-5 border-t border-date-900/10 pt-5">
+              <div className="flex items-center gap-2 rounded-2xl bg-gold-50 p-4 text-sm text-gold-800">
+                <Truck size={16} className="shrink-0" />
+                <span>{dict.inquiry.pricingNote}</span>
+              </div>
+            </div>
+
+            {error && (
+              <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={status === "submitting"}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-gold-500 py-4 text-sm font-semibold text-date-950 transition-colors hover:bg-gold-400 disabled:opacity-60"
+            >
+              {status === "submitting" ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  {dict.inquiry.submitting}
+                </>
+              ) : (
+                t(dict.inquiry.submit, { count: items.length, noun })
+              )}
+            </button>
+
+            <p className="mt-4 text-center text-xs text-date-400">
+              {dict.inquiry.reviewNote}
+            </p>
+          </div>
+        </aside>
+      </form>
     </div>
   );
 }
