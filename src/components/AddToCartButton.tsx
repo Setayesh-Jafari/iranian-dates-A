@@ -6,6 +6,7 @@ import type { Product } from "@/lib/types";
 import { useInquiry } from "@/store/cart";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n/I18nProvider";
+import { firstImage } from "@/lib/images";
 
 export function AddToInquiryButton({
   product,
@@ -30,7 +31,7 @@ export function AddToInquiryButton({
       id: product.id,
       slug: product.slug,
       name: product.name,
-      image: product.images[0] ?? "",
+      image: firstImage(product.images),
       origin: product.origin,
       weight: product.weight,
     });

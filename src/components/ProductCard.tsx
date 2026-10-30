@@ -9,6 +9,7 @@ import { useInquiry } from "@/store/cart";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n/I18nProvider";
 import { categoryLabel, t } from "@/i18n";
+import { firstImage } from "@/lib/images";
 
 export function ProductCard({
   product,
@@ -36,7 +37,7 @@ export function ProductCard({
       id: product.id,
       slug: product.slug,
       name: product.name,
-      image: product.images[0] ?? "",
+      image: firstImage(product.images),
       origin: product.origin,
       weight: product.weight,
     });
@@ -51,7 +52,7 @@ export function ProductCard({
     >
       <div className="relative aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-cream-200 shadow-[inset_0_0_0_1px_rgba(23,14,6,0.05)]">
         <Image
-          src={product.images[0] ?? ""}
+          src={firstImage(product.images)}
           alt={product.name}
           fill
           sizes="(min-width:1024px) 25vw, (min-width:640px) 50vw, 100vw"
