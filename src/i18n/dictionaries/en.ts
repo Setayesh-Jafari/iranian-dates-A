@@ -455,7 +455,7 @@ export const en = {
     commentPlaceholder:
       "What did you think of the quality, texture and taste? (min. 10 characters)",
     submit: "Submit review",
-    thankYou: "Thank you! Your review is live.",
+    thankYou: "Thank you! Your review will be published after it is checked.",
     errorGeneric: "Something went wrong",
     ratedOutOf: "Rated {value} out of 5",
   },

@@ -32,10 +32,13 @@ export function ReviewsSection({
   initialCount: number;
 }) {
   const { dict, locale } = useI18n();
-  const [reviews, setReviews] = useState<Review[]>(initialReviews);
-  const [rating, setRating] = useState(initialRating);
-  const [count, setCount] = useState(initialCount);
+  // New reviews are moderated, so the published list and rating never change
+  // locally after a submission.
+  const reviews = initialReviews;
+  const rating = initialRating;
+  const count = initialCount;
   const [hover, setHover] = useState(0);
+  const [hp, setHp] = useState(""); // honeypot: real users never fill this
   const [status, setStatus] = useState<"idle" | "submitting" | "done" | "error">(
     "idle",
   );
@@ -70,13 +73,11 @@ export function ReviewsSection({
           title: form.title,
           comment: form.comment,
           rating: form.rating,
+          _hp: hp,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || dict.reviews.errorGeneric);
-      setReviews((prev) => [data.review, ...prev]);
-      setRating(data.product.rating);
-      setCount(data.product.reviewCount);
       setForm({ author: "", location: "", title: "", comment: "", rating: 5 });
       setStatus("done");
     } catch (err) {
@@ -131,6 +132,17 @@ export function ReviewsSection({
           onSubmit={submit}
           className="mt-6 rounded-3xl border border-date-900/10 bg-white p-7"
         >
+          {/* Anti-spam honeypot: real users never see or fill this field. */}
+          <input
+            type="text"
+            name="_hp"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            value={hp}
+            onChange={(e) => setHp(e.target.value)}
+            className="pointer-events-none absolute -left-[9999px] top-auto h-px w-px overflow-hidden opacity-0"
+          />
           <h4 className="font-display text-lg font-semibold text-date-900">
             {dict.reviews.writeReview}
           </h4>

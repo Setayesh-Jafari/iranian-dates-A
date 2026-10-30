@@ -66,7 +66,7 @@ export async function getReviewsForProduct(productId: number): Promise<Review[]>
   const rows = await db
     .select()
     .from(reviews)
-    .where(eq(reviews.productId, productId))
+    .where(and(eq(reviews.productId, productId), eq(reviews.status, "approved")))
     .orderBy(desc(reviews.createdAt));
   return rows.map(serializeReview);
 }

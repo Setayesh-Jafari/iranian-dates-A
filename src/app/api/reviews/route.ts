@@ -12,7 +12,7 @@ function fail(message: string, status = 400, headers?: HeadersInit) {
   return Response.json({ error: message }, { status, headers });
 }
 
-/** رشته‌ی لازم: بدون بریدن بی‌صدا؛ خارج از بازه یعنی رد. */
+/** Required string: never silently truncated; out of range means rejected. */
 function required(v: unknown, min: number, max: number): string | null {
   if (typeof v !== "string") return null;
   const s = v.trim();
@@ -20,15 +20,20 @@ function required(v: unknown, min: number, max: number): string | null {
   return s;
 }
 
-/** رشته‌ی اختیاری: خالی => null، بیش‌ازحد/نامعتبر => رد. */
-function optional(v: unknown, max: number): { ok: true; value: string | null } | { ok: false } {
-  if (v == null || (typeof v === "string" && v.trim() === "")) return { ok: true, value: null };
+/** Optional string: empty becomes null; too long or invalid is rejected. */
+function optional(
+  v: unknown,
+  max: number,
+): { ok: true; value: string | null } | { ok: false } {
+  if (v == null || (typeof v === "string" && v.trim() === "")) {
+    return { ok: true, value: null };
+  }
   const s = required(v, 1, max);
   return s ? { ok: true, value: s } : { ok: false };
 }
 
 export async function POST(request: Request) {
-  // ۱) محدودیت نرخ: ۵ نظر در ساعت برای هر IP
+  // 1) Rate limit: 5 reviews per hour per IP.
   const rl = rateLimit(`review:${clientIp(request)}`, 5, 60 * 60 * 1000);
   if (!rl.ok) {
     return fail("Too many reviews. Please try again later.", 429, {
@@ -36,7 +41,7 @@ export async function POST(request: Request) {
     });
   }
 
-  // ۲) محدودیت حجم، قبل از پارس
+  // 2) Payload size guard before parsing.
   let raw: string;
   try {
     raw = await request.text();
@@ -53,17 +58,18 @@ export async function POST(request: Request) {
   }
   if (!body || typeof body !== "object") return fail("Invalid request body");
 
-  // ۳) honeypot: به ربات وانمود می‌کنیم موفق بوده، ولی چیزی ذخیره نمی‌کنیم
+  // 3) Honeypot: pretend success to bots, store nothing.
   if (typeof body._hp === "string" && body._hp.trim() !== "") {
     return Response.json({ status: "pending" }, { status: 202 });
   }
 
-  // ۴) اعتبارسنجی؛ هیچ فیلدی بی‌صدا بریده نمی‌شود
+  // 4) Validation: no field is silently truncated.
   const productId = Number(body.productId);
   const rating = Number(body.rating);
   if (!Number.isInteger(productId) || productId <= 0) return fail("Invalid product");
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5)
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
     return fail("Rating must be a whole number between 1 and 5");
+  }
 
   const author = required(body.author, 1, 80);
   if (!author) return fail("Please enter your name (up to 80 characters)");
@@ -77,7 +83,7 @@ export async function POST(request: Request) {
   const location = optional(body.location, 80);
   if (!location.ok) return fail("City must be 80 characters or fewer");
 
-  // ۵) وجود محصول
+  // 5) The product must exist.
   const db = getDb();
   const [product] = await db
     .select({ id: products.id })
@@ -86,7 +92,8 @@ export async function POST(request: Request) {
     .limit(1);
   if (!product) return fail("Product not found", 404);
 
-  // ۶) ذخیره به‌صورت pending؛ امتیاز محصول تا زمان تأیید تغییر نمی‌کند
+  // 6) Store as pending. products.rating / review_count are NOT touched until
+  //    a moderator approves the review (see the SQL in the setup notes).
   await db.insert(reviews).values({
     productId,
     author,

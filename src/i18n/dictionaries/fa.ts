@@ -455,7 +455,7 @@ export const fa: Dictionary = {
     commentPlaceholder:
       "کیفیت، بافت و طعم را چگونه ارزیابی می‌کنید؟ (حداقل ۱۰ کاراکتر)",
     submit: "ارسال نظر",
-    thankYou: "سپاسگزاریم! نظر شما منتشر شد.",
+    thankYou: "سپاسگزاریم! نظر شما پس از بررسی منتشر می‌شود.",
     errorGeneric: "مشکلی پیش آمد",
     ratedOutOf: "امتیاز {value} از ۵",
   },

@@ -54,9 +54,14 @@ export const reviews = pgTable(
     rating: integer("rating").notNull(),
     title: text("title"),
     comment: text("comment").notNull(),
+    // pending | approved | rejected. Only "approved" reviews are shown publicly.
+    status: text("status").notNull().default("pending"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("reviews_product_idx").on(table.productId)]
+  (table) => [
+    index("reviews_product_idx").on(table.productId),
+    index("reviews_status_idx").on(table.productId, table.status),
+  ]
 );
 
 export const inquiries = pgTable("inquiries", {
