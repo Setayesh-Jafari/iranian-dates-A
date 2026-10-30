@@ -9,8 +9,6 @@ export function serializeProduct(p: ProductRow): Product {
     tagline: p.tagline,
     description: p.description,
     details: p.details,
-    price: p.price,
-    compareAtPrice: p.compareAtPrice,
     category: p.category,
     origin: p.origin,
     weight: p.weight,

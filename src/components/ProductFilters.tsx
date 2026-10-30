@@ -14,8 +14,6 @@ export type FilterState = {
   q?: string;
   category?: string;
   sort?: string;
-  min?: number;
-  max?: number;
   rating?: number;
 };
 
@@ -43,8 +41,6 @@ export function ProductFilters({
     if (next.q) params.set("q", next.q);
     if (next.category) params.set("category", next.category);
     if (next.sort && next.sort !== "featured") params.set("sort", next.sort);
-    if (next.min) params.set("min", String(next.min));
-    if (next.max) params.set("max", String(next.max));
     if (next.rating) params.set("rating", String(next.rating));
     const qs = params.toString();
     return qs ? `${productsHref}?${qs}` : productsHref;
@@ -64,27 +60,8 @@ export function ProductFilters({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [q]);
 
-  const PRICE_BRACKETS = [
-    { key: "under500", min: 0, max: 499, label: dict.priceBrackets.under500 },
-    {
-      key: "from500to1000",
-      min: 500,
-      max: 1000,
-      label: dict.priceBrackets.from500to1000,
-    },
-    {
-      key: "from1000to2000",
-      min: 1000,
-      max: 2000,
-      label: dict.priceBrackets.from1000to2000,
-    },
-    { key: "over2000", min: 2000, max: 0, label: dict.priceBrackets.over2000 },
-  ];
-
   const SORTS = [
     { value: "featured", label: dict.sorts.featured },
-    { value: "price-asc", label: dict.sorts.priceAsc },
-    { value: "price-desc", label: dict.sorts.priceDesc },
     { value: "rating", label: dict.sorts.rating },
     { value: "newest", label: dict.sorts.newest },
   ];
@@ -98,7 +75,6 @@ export function ProductFilters({
 
   const activeCount = [
     filters.category,
-    filters.min || filters.max ? "price" : undefined,
     filters.rating ? "rating" : undefined,
   ].filter(Boolean).length;
 
@@ -164,34 +140,6 @@ export function ProductFilters({
               </span>
             </button>
           ))}
-        </div>
-      </div>
-
-      <div>
-        <h4 className="text-xs font-semibold uppercase tracking-[0.18em] text-date-500">
-          {dict.common.price}
-        </h4>
-        <div className="mt-3 flex flex-col gap-1">
-          {PRICE_BRACKETS.map((b) => {
-            const active = filters.min === b.min && filters.max === b.max;
-            return (
-              <button
-                key={b.key}
-                type="button"
-                onClick={() =>
-                  go({ min: b.min || undefined, max: b.max || undefined })
-                }
-                className={cn(
-                  "rounded-xl px-3 py-2.5 text-start text-sm transition-colors",
-                  active
-                    ? "bg-date-900 text-cream-50"
-                    : "text-date-700 hover:bg-cream-100",
-                )}
-              >
-                {b.label}
-              </button>
-            );
-          })}
         </div>
       </div>
 

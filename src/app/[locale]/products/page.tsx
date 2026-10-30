@@ -54,8 +54,6 @@ export default async function ProductsPage({
     q: first(sp.q) || undefined,
     category: first(sp.category) || undefined,
     sort: first(sp.sort) || undefined,
-    min: first(sp.min) ? Number(first(sp.min)) : undefined,
-    max: first(sp.max) ? Number(first(sp.max)) : undefined,
     rating: first(sp.rating) ? Number(first(sp.rating)) : undefined,
   };
 

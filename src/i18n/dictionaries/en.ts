@@ -72,7 +72,6 @@ export const en = {
     searchPlaceholder: "Search dates…",
     allProducts: "All Products",
     category: "Category",
-    price: "Price",
     rating: "Rating",
     productOne: "product",
     productMany: "products",
@@ -125,17 +124,8 @@ export const en = {
 
   sorts: {
     featured: "Featured",
-    priceAsc: "Price: Low to High",
-    priceDesc: "Price: High to Low",
     rating: "Top Rated",
     newest: "Newest",
-  },
-
-  priceBrackets: {
-    under500: "Under ₹500",
-    from500to1000: "₹500 – ₹1,000",
-    from1000to2000: "₹1,000 – ₹2,000",
-    over2000: "₹2,000 & up",
   },
 
   ratingFilters: {

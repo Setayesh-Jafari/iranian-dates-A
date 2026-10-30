@@ -71,7 +71,6 @@ export const fa: Dictionary = {
     searchPlaceholder: "جست‌وجوی خرما…",
     allProducts: "همه محصولات",
     category: "دسته‌بندی",
-    price: "قیمت",
     rating: "امتیاز",
     productOne: "محصول",
     productMany: "محصول",
@@ -127,17 +126,8 @@ export const fa: Dictionary = {
 
   sorts: {
     featured: "منتخب",
-    priceAsc: "قیمت: کم به زیاد",
-    priceDesc: "قیمت: زیاد به کم",
     rating: "بالاترین امتیاز",
     newest: "جدیدترین",
-  },
-
-  priceBrackets: {
-    under500: "زیر ۵۰۰ روپیه",
-    from500to1000: "۵۰۰ تا ۱٬۰۰۰ روپیه",
-    from1000to2000: "۱٬۰۰۰ تا ۲٬۰۰۰ روپیه",
-    over2000: "۲٬۰۰۰ روپیه و بالاتر",
   },
 
   ratingFilters: {

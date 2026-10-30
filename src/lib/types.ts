@@ -24,8 +24,6 @@ export type Product = {
   tagline: string | null;
   description: string;
   details: string | null;
-  price: number;
-  compareAtPrice: number | null;
   category: string;
   origin: string;
   weight: string;
@@ -50,16 +48,4 @@ export type Review = {
   title: string | null;
   comment: string;
   createdAt: string;
-};
-
-export type CartItem = {
-  id: number;
-  slug: string;
-  name: string;
-  price: number;
-  compareAtPrice: number | null;
-  image: string;
-  weight: string;
-  unit: string;
-  qty: number;
 };
