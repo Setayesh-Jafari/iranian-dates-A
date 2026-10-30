@@ -67,6 +67,7 @@ export const en = {
     perOrder: "Per order",
     close: "Close",
     filters: "Filters",
+    sortBy: "Sort products by",
     closeFilters: "Close filters",
     clearAllFilters: "Clear all filters",
     searchPlaceholder: "Search dates…",
