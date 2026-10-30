@@ -21,12 +21,13 @@ const nextConfig: NextConfig = {
           key: "Permissions-Policy",
           value: "geolocation=(), microphone=(), camera=(), payment=()",
         },
-        // Strict-Transport-Security only if NEXT_PUBLIC_SITE_URL is HTTPS (production check)
-        ...(process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://")
+        // Strict-Transport-Security only for production HTTPS
+        ...(process.env.NODE_ENV === "production" &&
+          process.env.NEXT_PUBLIC_SITE_URL?.startsWith("https://")
           ? [
               {
                 key: "Strict-Transport-Security",
-                value: "max-age=31536000; includeSubDomains; preload",
+                value: "max-age=31536000",
               },
             ]
           : []),

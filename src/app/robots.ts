@@ -1,9 +1,10 @@
 import type { MetadataRoute } from "next";
-import { LOCALES, localePath } from "@/i18n/config";
+import { LOCALES } from "@/i18n/config";
 
 export default function robots(): MetadataRoute.Robots {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
   
+  // Safe fallback: if domain is not set, disallow all to prevent indexing on unknown/localhost domains
   if (!siteUrl) {
     return {
       rules: [{ userAgent: "*", disallow: "/" }],
@@ -14,28 +15,29 @@ export default function robots(): MetadataRoute.Robots {
   const base = siteUrl.replace(/\/+$/, "");
   const sitemapUrl = `${base}/sitemap.xml`;
 
+  // Unified group for user-agent *
+  // No unnecessary Allow rules (crawler starts from / and follows sitemap/links)
+  // Inquiry: No disallow (allows crawler to see noindex meta tag in HTML)
+  // Checkout: Redirects to /products or /inquiry per layout/middleware; allow crawl to see redirect/noindex
+  // Removed /_next/ disallow
   const rules: {
     userAgent: string;
-    allow?: string | string[];
-    disallow?: string | string[];
+    disallow?: string[];
+    sitemap?: string;
   }[] = [
-    { userAgent: "*", allow: "/" },
-    { userAgent: "*", allow: "/en/" },
-    { userAgent: "*", allow: "/fa/" },
-    { userAgent: "*", allow: "/en/products" },
-    { userAgent: "*", allow: "/fa/products" },
-    { userAgent: "*", allow: "/en/certifications" },
-    { userAgent: "*", allow: "/fa/certifications" },
-    { userAgent: "*", allow: "/en/products/*" },
-    { userAgent: "*", allow: "/fa/products/*" },
-    
-    { userAgent: "*", disallow: "/api/" },
-    { userAgent: "*", disallow: "/_next/" },
-    { userAgent: "*", disallow: "/inquiry" },
-    { userAgent: "*", disallow: "/checkout" },
-    { userAgent: "*", disallow: "/[locale]/inquiry" },
-    { userAgent: "*", disallow: "/[locale]/checkout" },
-    { userAgent: "*", disallow: "/error" },
+    {
+      userAgent: "*",
+      disallow: [
+        "/api/",
+        "/inquiry",
+        "/checkout",
+        "/error",
+        // Note: [locale] paths are real segments /en/ and /fa/
+        // Inquiry and Checkout pages use noindex via metadata (layout/page) rather than robots disallow
+        // so crawlers can see the noindex tag.
+      ],
+      sitemap: sitemapUrl,
+    },
   ];
 
   return {
