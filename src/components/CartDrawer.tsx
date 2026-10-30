@@ -69,7 +69,7 @@ export function CartDrawer() {
             animate={{ x: 0 }}
             exit={{ x: offscreen }}
             transition={{ duration: 0.35, ease: EASE }}
-            className="fixed inset-y-0 end-0 z-[80] flex w-full max-w-md flex-col bg-cream-50 shadow-2xl"
+            className="fixed inset-y-0 end-0 z-[80] flex w-[min(100vw,28rem)] max-w-md flex-col bg-cream-50 shadow-2xl"
           >
             {/* Header */}
             <div className="flex items-center justify-between border-b border-date-900/10 px-6 py-5">

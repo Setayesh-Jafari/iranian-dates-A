@@ -66,6 +66,7 @@ export const fa: Dictionary = {
     perOrder: "برای هر سفارش",
     close: "بستن",
     filters: "فیلترها",
+    sortBy: "مرتب‌سازی محصولات بر اساس",
     closeFilters: "بستن فیلترها",
     clearAllFilters: "پاک کردن همه فیلترها",
     searchPlaceholder: "جست‌وجوی خرما…",
