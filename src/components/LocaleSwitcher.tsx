@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { Suspense } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Languages } from "lucide-react";
 import {
   LOCALES,
@@ -18,15 +19,17 @@ import { cn } from "@/lib/utils";
  * locale; the middleware persists the choice in the `NEXT_LOCALE` cookie on
  * the next request. No JavaScript routing and no redirect is involved.
  */
-export function LocaleSwitcher({
-  tone = "dark",
-  className,
-}: {
-  tone?: "light" | "dark";
-  className?: string;
-}) {
+type LocaleSwitcherProps = { tone?: "light" | "dark"; className?: string };
+
+export function LocaleSwitcher(props: LocaleSwitcherProps) {
+  return <Suspense fallback={null}><LocaleSwitcherContent {...props} /></Suspense>;
+}
+
+function LocaleSwitcherContent({ tone = "dark", className }: LocaleSwitcherProps) {
   const { locale, dict } = useI18n();
   const pathname = usePathname() || "/";
+  const search = useSearchParams().toString();
+  const currentPath = search ? `${pathname}?${search}` : pathname;
   const light = tone === "light";
 
   return (
@@ -48,11 +51,11 @@ export function LocaleSwitcher({
         return (
           <Link
             key={candidate}
-            href={switchLocalePath(pathname, candidate)}
+            href={switchLocalePath(currentPath, candidate)}
             hrefLang={candidate}
             aria-current={active ? "true" : undefined}
             className={cn(
-              "rounded-full px-2.5 py-1 text-xs font-semibold tabular-nums transition-colors",
+              "rounded-full px-1.5 py-1 text-[10px] font-semibold sm:px-2.5 sm:text-xs tabular-nums transition-colors",
               active
                 ? light
                   ? "bg-cream-50/20 text-cream-50"

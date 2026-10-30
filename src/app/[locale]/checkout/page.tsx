@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { DEFAULT_LOCALE, isLocale, localePath, type Locale } from "@/i18n/config";
+
+export const metadata: Metadata = { robots: { index: false, follow: true } };
 
 /**
  * Checkout no longer exists as its own step: it was replaced by the inquiry

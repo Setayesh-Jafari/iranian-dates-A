@@ -8,14 +8,16 @@ import { useInquiry } from "@/store/cart";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n/I18nProvider";
 import { firstImage } from "@/lib/images";
+import { useMounted } from "@/lib/useMounted";
 
 export function ProductPurchase({ product }: { product: Product }) {
   const { dict, href } = useI18n();
+  const mounted = useMounted();
   const addItem = useInquiry((s) => s.addItem);
   const openDrawer = useInquiry((s) => s.openDrawer);
   const items = useInquiry((s) => s.items);
   const [added, setAdded] = useState(false);
-  const alreadyAdded = items.some((i) => i.id === product.id);
+  const alreadyAdded = mounted && items.some((i) => i.id === product.id);
 
   function addToInquiry() {
     if (alreadyAdded || added) {

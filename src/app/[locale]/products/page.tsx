@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCategoryFacets, getProducts } from "@/lib/queries";
+import { pageMetadata } from "@/lib/seo";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductFilters, type FilterState } from "@/components/ProductFilters";
 import { getDictionary, categoryLabel, t } from "@/i18n";
@@ -26,10 +27,9 @@ export async function generateMetadata({
   const { locale: raw } = await params;
   const locale = resolveLocale(raw) ?? DEFAULT_LOCALE;
   const dict = getDictionary(locale);
-  return {
-    title: dict.meta.productsTitle,
-    description: dict.meta.productsDescription,
-  };
+  return pageMetadata({
+    locale, path: "/products", title: dict.meta.productsTitle, description: dict.meta.productsDescription,
+  });
 }
 
 function first(v: string | string[] | undefined): string | undefined {
@@ -51,14 +51,14 @@ export default async function ProductsPage({
   const sp = await searchParams;
 
   const filters: FilterState = {
-    q: first(sp.q) || undefined,
-    category: first(sp.category) || undefined,
-    sort: first(sp.sort) || undefined,
-    rating: first(sp.rating) ? Number(first(sp.rating)) : undefined,
+    q: first(sp.q)?.trim().slice(0, 100) || undefined,
+    category: first(sp.category)?.slice(0, 80) || undefined,
+    sort: ["featured", "rating", "newest"].includes(first(sp.sort) ?? "") ? first(sp.sort) : undefined,
+    rating: [4, 4.5].includes(Number(first(sp.rating))) ? Number(first(sp.rating)) : undefined,
   };
 
   const [products, facets] = await Promise.all([
-    getProducts(filters),
+    getProducts({ ...filters, locale }),
     getCategoryFacets(),
   ]);
 
@@ -87,7 +87,7 @@ export default async function ProductsPage({
       </div>
 
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
-        <ProductFilters filters={filters} facets={facets} total={products.length}>
+        <ProductFilters key={JSON.stringify(filters)} filters={filters} facets={facets} total={products.length}>
           {products.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-date-900/15 bg-white/50 px-6 py-24 text-center">
               <p className="font-display text-xl font-semibold text-date-900">

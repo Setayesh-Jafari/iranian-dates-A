@@ -1,3 +1,4 @@
+import { pageMetadata } from "@/lib/seo";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -51,10 +52,9 @@ export async function generateMetadata({
   const { locale: raw } = await params;
   const locale = resolveLocale(raw) ?? DEFAULT_LOCALE;
   const dict = getDictionary(locale);
-  return {
-    title: dict.meta.certificationsTitle,
-    description: dict.meta.certificationsDescription,
-  };
+  return pageMetadata({
+    locale, path: "/certifications", title: dict.meta.certificationsTitle, description: dict.meta.certificationsDescription,
+  });
 }
 
 export default async function CertificationsPage({

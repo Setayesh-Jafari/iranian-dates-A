@@ -7,6 +7,7 @@ import { useInquiry } from "@/store/cart";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n/I18nProvider";
 import { firstImage } from "@/lib/images";
+import { useMounted } from "@/lib/useMounted";
 
 export function AddToInquiryButton({
   product,
@@ -16,11 +17,12 @@ export function AddToInquiryButton({
   className?: string;
 }) {
   const { dict } = useI18n();
+  const mounted = useMounted();
   const addItem = useInquiry((s) => s.addItem);
   const items = useInquiry((s) => s.items);
   const openDrawer = useInquiry((s) => s.openDrawer);
   const [added, setAdded] = useState(false);
-  const alreadyAdded = items.some((i) => i.id === product.id);
+  const alreadyAdded = mounted && items.some((i) => i.id === product.id);
 
   function handleAdd() {
     if (alreadyAdded || added) {

@@ -72,7 +72,7 @@ export function Header() {
             : "border-b border-transparent bg-transparent",
         )}
       >
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-[76px] lg:px-8">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:h-[76px] lg:px-8">
           <Logo tone={solid ? "dark" : "light"} />
 
           <nav className="hidden items-center gap-8 lg:flex">
@@ -107,7 +107,7 @@ export function Header() {
               onClick={openDrawer}
               aria-label={dict.nav.openInquiryList}
               className={cn(
-                "relative grid h-11 w-11 place-items-center rounded-full transition-colors",
+                "relative grid h-10 w-10 place-items-center sm:h-11 sm:w-11 rounded-full transition-colors",
                 solid
                   ? "text-date-900 hover:bg-date-900/5"
                   : "text-cream-50 hover:bg-cream-50/10",
@@ -140,7 +140,7 @@ export function Header() {
               onClick={() => setMenuPath(menuOpen ? null : pathname)}
               aria-label={dict.nav.toggleMenu}
               className={cn(
-                "grid h-11 w-11 place-items-center rounded-full transition-colors lg:hidden",
+                "grid h-10 w-10 place-items-center rounded-full transition-colors sm:h-11 sm:w-11 lg:hidden",
                 solid
                   ? "text-date-900 hover:bg-date-900/5"
                   : "text-cream-50 hover:bg-cream-50/10",

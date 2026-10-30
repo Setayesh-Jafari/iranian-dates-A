@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" role="img" aria-label="Product image unavailable">
+  <rect width="800" height="800" fill="#efe4d1"/>
+  <circle cx="400" cy="360" r="155" fill="#e4d2b4"/>
+  <path d="M400 248c-45 0-77 51-77 112s32 112 77 112 77-51 77-112-32-112-77-112Z" fill="#87541f"/>
+  <path d="M400 253c-11 36-14 71-14 107s4 72 14 107" fill="none" stroke="#c5852c" stroke-width="9" stroke-linecap="round"/>
+  <path d="M400 249c3-28 19-47 48-56" fill="none" stroke="#87541f" stroke-width="12" stroke-linecap="round"/>
+  <path d="M250 575h300" stroke="#cead8f" stroke-width="8" stroke-linecap="round"/>
+</svg>

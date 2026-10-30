@@ -1,58 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowRight, Check } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { useI18n } from "@/i18n/I18nProvider";
 
+/** No mailing-list provider is configured; offer the real inquiry flow instead. */
 export function Newsletter() {
-  const { dict, dir } = useI18n();
-  const [email, setEmail] = useState("");
-  const [done, setDone] = useState(false);
-
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!email.includes("@")) return;
-    setDone(true);
-  }
-
+  const { dict, dir, href } = useI18n();
   return (
     <div className="mx-auto max-w-xl text-center">
-      <h3 className="font-display text-2xl font-semibold text-cream-50 sm:text-3xl">
-        {dict.newsletter.title}
-      </h3>
-      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-cream-100/70">
-        {dict.newsletter.text}
-      </p>
-
-      {done ? (
-        <div className="mx-auto mt-6 flex max-w-md items-center justify-center gap-2 rounded-full border border-gold-500/30 bg-gold-500/10 px-5 py-3.5 text-sm font-medium text-gold-300">
-          <Check size={16} /> {dict.newsletter.done}
-        </div>
-      ) : (
-        <form
-          onSubmit={submit}
-          className="mx-auto mt-6 flex max-w-md items-center gap-2 rounded-full border border-cream-50/15 bg-cream-50/5 p-1.5 backdrop-blur"
-        >
-          <input
-            type="email"
-            required
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder={dict.newsletter.emailPlaceholder}
-            className="w-full bg-transparent px-4 py-2.5 text-sm text-cream-50 placeholder:text-cream-100/40 focus:outline-none"
-          />
-          <button
-            type="submit"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-gold-500 px-5 py-2.5 text-sm font-semibold text-date-950 transition-colors hover:bg-gold-400"
-          >
-            {dict.newsletter.subscribe}
-            <ArrowRight
-              size={15}
-              className={dir === "rtl" ? "rotate-180" : undefined}
-            />
-          </button>
-        </form>
-      )}
+      <h3 className="font-display text-2xl font-semibold text-cream-50 sm:text-3xl">{dict.footer.ctaTitle}</h3>
+      <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-cream-100/70">{dict.footer.ctaText}</p>
+      <Link href={href("/inquiry")} className="mt-6 inline-flex items-center gap-2 rounded-full bg-gold-500 px-6 py-3 text-sm font-semibold text-date-950">
+        {dict.common.contactTeam}<ArrowRight size={15} className={dir === "rtl" ? "rotate-180" : undefined} />
+      </Link>
     </div>
   );
 }

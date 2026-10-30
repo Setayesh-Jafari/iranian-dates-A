@@ -11,7 +11,7 @@ import {
 const PUBLIC_FILE = /\.[^/]+$/;
 
 /**
- * Locale routing middleware.
+ * Locale routing proxy.
  *
  * - `/`, `/products`, … are redirected to `/{locale}/…`.
  * - The locale comes from the `NEXT_LOCALE` cookie (an explicit previous
@@ -22,7 +22,7 @@ const PUBLIC_FILE = /\.[^/]+$/;
  * - Redirects are same-origin by construction: only the pathname of the
  *   incoming request is prefixed, never a host or an absolute URL.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
   // Never rewrite API routes, Next internals, or file requests.
@@ -49,6 +49,8 @@ export function middleware(request: NextRequest) {
         path: "/",
         maxAge: LOCALE_COOKIE_MAX_AGE,
         sameSite: "lax",
+        httpOnly: true,
+        secure: request.nextUrl.protocol === "https:" || request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim() === "https",
       });
     }
     return response;
@@ -62,7 +64,11 @@ export function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   url.pathname = `/${locale}${pathname === "/" ? "" : pathname}`;
   url.search = search;
-  return NextResponse.redirect(url);
+  const response = NextResponse.redirect(url);
+  // Redirect selection depends on the visitor's language and cookie.
+  response.headers.set("Cache-Control", "private, no-store");
+  response.headers.set("Vary", "Accept-Language, Cookie");
+  return response;
 }
 
 export const config = {
