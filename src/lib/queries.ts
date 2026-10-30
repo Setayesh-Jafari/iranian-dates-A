@@ -12,13 +12,21 @@ export type ProductFilters = {
   limit?: number;
 };
 
+/**
+ * Escapes the LIKE/ILIKE wildcards (% and _) and the escape character itself,
+ * so user input is matched literally. Postgres uses backslash by default.
+ */
+function escapeLike(value: string): string {
+  return value.replace(/[\\%_]/g, "\\$&");
+}
+
 export async function getProducts(filters: ProductFilters = {}): Promise<Product[]> {
   const db = getDb();
   const conditions: SQL[] = [];
 
   if (filters.category) conditions.push(eq(products.category, filters.category));
   if (filters.q) {
-    const like = `%${filters.q}%`;
+    const like = `%${escapeLike(filters.q)}%`;
     const searchCondition = or(ilike(products.name, like), ilike(products.description, like));
     if (searchCondition) conditions.push(searchCondition);
   }
@@ -39,7 +47,9 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
   const query = db.select().from(products).$dynamic();
   if (conditions.length) query.where(and(...conditions));
   query.orderBy(...order);
-  if (filters.limit) query.limit(filters.limit);
+  if (filters.limit && Number.isFinite(filters.limit)) {
+    query.limit(Math.max(1, Math.floor(filters.limit)));
+  }
 
   const rows = await query;
   return rows.map(serializeProduct);

@@ -29,7 +29,24 @@ export function getPool(): Pool {
   const cached = globalForDb.__arenaNextJsPostgresqlPool ?? modulePool;
   if (cached) return cached;
 
-  const pool = new Pool({ connectionString: databaseUrl });
+  const pool = new Pool({
+    connectionString: databaseUrl,
+    max: 10, // upper bound of simultaneous connections from this process
+    idleTimeoutMillis: 30_000, // close connections idle for 30 s
+    connectionTimeoutMillis: 5_000, // fail fast instead of waiting forever for a connection
+  });
+
+  // pg emits "error" on the pool when an IDLE client's connection drops
+  // (database restart, network blip). Without a listener Node treats it as an
+  // unhandled "error" event and can crash the whole process. The pool already
+  // discards the broken client and opens a new one on demand, so we only log.
+  // Class + code only: never the message, which can contain host/port details.
+  pool.on("error", (err: Error & { code?: string }) => {
+    console.error(
+      `[pg] idle client error: ${err.constructor.name}${err.code ? ` (${err.code})` : ""}`
+    );
+  });
+
   modulePool = pool;
   if (process.env.NODE_ENV !== "production") {
     globalForDb.__arenaNextJsPostgresqlPool = pool;

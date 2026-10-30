@@ -491,6 +491,12 @@ export const en = {
     text: "The page you were looking for does not exist or has moved.",
     cta: "Back to home",
   },
+
+  serverError: {
+    title: "Something went wrong",
+    text: "We couldn't load this page right now. Please try again in a moment.",
+    retry: "Try again",
+  },
 };
 
 /** Shape every locale dictionary must match exactly (key parity enforced). */
