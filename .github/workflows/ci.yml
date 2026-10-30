@@ -37,15 +37,7 @@ jobs:
       - name: Typecheck
         run: npx tsc --noEmit
 
-      # NON-BLOCKING ON PURPOSE.
-      # `npm run lint` currently exits 1 with 2 pre-existing errors that predate
-      # this workflow and are out of scope for a CI-only change:
-      #   - src/components/Header.tsx:38   react-hooks/set-state-in-effect
-      #   - src/lib/useMounted.ts:8        react-hooks/set-state-in-effect
-      # The step still runs and its output is reported. Remove
-      # `continue-on-error: true` once those two are fixed to make lint a gate.
-      - name: Lint (non-blocking)
-        continue-on-error: true
+      - name: Lint
         run: npm run lint
 
       - name: Build

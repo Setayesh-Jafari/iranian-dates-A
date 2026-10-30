@@ -21,7 +21,11 @@ export function Header() {
   const pathname = usePathname();
   const isHome = stripLocale(pathname) === "/";
   const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
+  // The menu is "open" only for the page it was opened on, so it closes by
+  // itself on navigation without needing an effect that calls setState.
+  const [menuPath, setMenuPath] = useState<string | null>(null);
+  const menuOpen = menuPath === pathname;
+  const closeMenu = () => setMenuPath(null);
   const items = useInquiry((s) => s.items);
   const openDrawer = useInquiry((s) => s.openDrawer);
   const mounted = useMounted();
@@ -33,10 +37,6 @@ export function Header() {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [pathname]);
 
   const solid = scrolled || !isHome || menuOpen;
 
@@ -137,7 +137,7 @@ export function Header() {
             {/* Mobile menu */}
             <button
               type="button"
-              onClick={() => setMenuOpen((v) => !v)}
+              onClick={() => setMenuPath(menuOpen ? null : pathname)}
               aria-label={dict.nav.toggleMenu}
               className={cn(
                 "grid h-11 w-11 place-items-center rounded-full transition-colors lg:hidden",
@@ -165,6 +165,7 @@ export function Header() {
                   <Link
                     key={item.label}
                     href={item.href}
+                    onClick={closeMenu}
                     className="rounded-xl px-3 py-3 text-base font-medium text-date-800 transition-colors hover:bg-cream-100"
                   >
                     {item.label}
@@ -178,6 +179,7 @@ export function Header() {
                   <Link
                     key={c.slug}
                     href={href(`/products?category=${c.slug}`)}
+                    onClick={closeMenu}
                     className="flex items-center justify-between rounded-xl px-3 py-2.5 text-sm text-date-700 transition-colors hover:bg-cream-100"
                   >
                     <span>{categoryLabel(dict, c.slug)}</span>
@@ -189,6 +191,7 @@ export function Header() {
                 <div className="my-2 h-px bg-date-900/8" />
                 <Link
                   href={href("/inquiry")}
+                  onClick={closeMenu}
                   className="mt-1 flex items-center justify-center rounded-full bg-gold-500 px-5 py-3 text-sm font-semibold text-date-950 transition-colors hover:bg-gold-400"
                 >
                   {dict.nav.getQuote}
