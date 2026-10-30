@@ -240,6 +240,7 @@ export function ProductFilters({
           </div>
           <div className="relative">
             <select
+              aria-label={dict.common.sortBy}
               value={filters.sort ?? "featured"}
               onChange={(e) => go({ sort: e.target.value })}
               className="appearance-none rounded-full border border-date-900/12 bg-white py-2.5 pe-10 ps-4 text-sm font-medium text-date-800 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20"
@@ -293,7 +294,7 @@ export function ProductFilters({
               onClick={() => setOpen(false)}
             />
             <motion.div
-              className="fixed inset-y-0 start-0 z-[70] w-[85%] max-w-sm overflow-y-auto bg-cream-50 p-6"
+              className="fixed inset-y-0 start-0 z-[70] box-border w-[min(85vw,24rem)] max-w-sm overflow-y-auto bg-cream-50 p-6"
               initial={{ x: dir === "rtl" ? "100%" : "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: dir === "rtl" ? "100%" : "-100%" }}
