@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useRef } from "react";
 import { ArrowRight, ClipboardList, X, Trash2 } from "lucide-react";
 import { useInquiry, inquiryCount } from "@/store/cart";
 import { EASE } from "@/lib/motion";
@@ -16,6 +17,18 @@ export function CartDrawer() {
   const closeDrawer = useInquiry((s) => s.closeDrawer);
   const removeItem = useInquiry((s) => s.removeItem);
   const count = inquiryCount(items);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (isOpen && !dialog.open) dialog.showModal();
+  }, [isOpen]);
+
+  function finishClose() {
+    const dialog = dialogRef.current;
+    if (dialog?.open) dialog.close();
+  }
 
   // The drawer is anchored to the inline-end edge, so it slides in from the
   // side that is "away" in the current writing direction.
@@ -23,7 +36,20 @@ export function CartDrawer() {
   const flip = dir === "rtl" ? "rotate-180" : undefined;
 
   return (
-    <AnimatePresence>
+    <dialog
+      ref={dialogRef}
+      aria-labelledby="cart-drawer-title"
+      aria-modal="true"
+      onCancel={(event) => {
+        event.preventDefault();
+        closeDrawer();
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) closeDrawer();
+      }}
+      className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none overflow-hidden border-0 bg-transparent p-0 text-inherit backdrop:bg-transparent"
+    >
+      <AnimatePresence onExitComplete={finishClose}>
       {isOpen && (
         <>
           {/* Backdrop */}
@@ -37,7 +63,8 @@ export function CartDrawer() {
           />
 
           {/* Drawer */}
-          <motion.aside
+          <motion.div
+            role="document"
             initial={{ x: offscreen }}
             animate={{ x: 0 }}
             exit={{ x: offscreen }}
@@ -48,7 +75,7 @@ export function CartDrawer() {
             <div className="flex items-center justify-between border-b border-date-900/10 px-6 py-5">
               <div className="flex items-center gap-3">
                 <ClipboardList size={20} className="text-gold-600" />
-                <h2 className="font-display text-lg font-semibold text-date-900">
+                <h2 id="cart-drawer-title" className="font-display text-lg font-semibold text-date-900">
                   {dict.drawer.title}
                 </h2>
                 {count > 0 && (
@@ -59,6 +86,7 @@ export function CartDrawer() {
               </div>
               <button
                 type="button"
+                autoFocus
                 onClick={closeDrawer}
                 aria-label={dict.common.close}
                 className="grid h-10 w-10 place-items-center rounded-full text-date-600 transition-colors hover:bg-date-900/5"
@@ -151,9 +179,10 @@ export function CartDrawer() {
                 </div>
               </>
             )}
-          </motion.aside>
+          </motion.div>
         </>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </dialog>
   );
 }

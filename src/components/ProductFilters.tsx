@@ -33,6 +33,8 @@ export function ProductFilters({
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState(filters.q ?? "");
   const firstRender = useRef(true);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
 
   const productsHref = href("/products");
 
@@ -44,6 +46,17 @@ export function ProductFilters({
     if (next.rating) params.set("rating", String(next.rating));
     const qs = params.toString();
     return qs ? `${productsHref}?${qs}` : productsHref;
+  }
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open && !dialog.open) dialog.showModal();
+  }, [open]);
+
+  function finishClose() {
+    const dialog = dialogRef.current;
+    if (dialog?.open) dialog.close();
   }
 
   useEffect(() => {
@@ -194,6 +207,7 @@ export function ProductFilters({
       <div className="flex flex-col gap-3 border-b border-date-900/10 pb-5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
           <button
+            ref={triggerRef}
             type="button"
             onClick={() => setOpen(true)}
             className="inline-flex items-center gap-2 rounded-full border border-date-900/12 bg-white px-4 py-2.5 text-sm font-medium text-date-800 transition-colors hover:bg-cream-100 lg:hidden"
@@ -264,8 +278,9 @@ export function ProductFilters({
         <div>{children}</div>
       </div>
 
-      {/* Mobile sheet */}
-      <AnimatePresence>
+      {/* Mobile modal sheet */}
+      <dialog ref={dialogRef} aria-labelledby="product-filters-title" aria-modal="true" onCancel={(event) => { event.preventDefault(); setOpen(false); }} onClose={() => triggerRef.current?.focus()} className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none overflow-hidden border-0 bg-transparent p-0 text-inherit backdrop:bg-transparent">
+      <AnimatePresence onExitComplete={finishClose}>
         {open && (
           <>
             <motion.button
@@ -285,11 +300,12 @@ export function ProductFilters({
               transition={{ duration: 0.35, ease: EASE }}
             >
               <div className="mb-6 flex items-center justify-between">
-                <h3 className="font-display text-lg font-semibold text-date-900">
+                <h3 id="product-filters-title" className="font-display text-lg font-semibold text-date-900">
                   {dict.common.filters}
                 </h3>
                 <button
                   type="button"
+                  autoFocus
                   onClick={() => setOpen(false)}
                   aria-label={dict.common.closeFilters}
                   className="grid h-9 w-9 place-items-center rounded-full text-date-600 hover:bg-cream-100"
@@ -309,6 +325,7 @@ export function ProductFilters({
           </>
         )}
       </AnimatePresence>
+      </dialog>
     </div>
   );
 }
