@@ -29,8 +29,6 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: "*",
       disallow: [
         "/api/",
-        "/inquiry",
-        "/checkout",
         "/error",
         // Note: [locale] paths are real segments /en/ and /fa/
         // Inquiry and Checkout pages use noindex via metadata (layout/page) rather than robots disallow
