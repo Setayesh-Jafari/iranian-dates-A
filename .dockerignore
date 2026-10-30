@@ -1,6 +1,12 @@
 node_modules
 .next
 .git
-.env
-.env.local
+.env*
+.npmrc
+*.pem
+*.key
+*.log
+coverage
+test-results
+playwright-report
 *.md

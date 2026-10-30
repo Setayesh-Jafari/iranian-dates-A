@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/SafeImage";
 import Link from "next/link";
 import { useState } from "react";
 import { Check, ClipboardList } from "lucide-react";
@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n/I18nProvider";
 import { categoryLabel, t } from "@/i18n";
 import { firstImage } from "@/lib/images";
+import { useMounted } from "@/lib/useMounted";
 
 export function ProductCard({
   product,
@@ -19,12 +20,12 @@ export function ProductCard({
   priority?: boolean;
 }) {
   const { dict, href } = useI18n();
+  const mounted = useMounted();
   const addItem = useInquiry((s) => s.addItem);
   const openDrawer = useInquiry((s) => s.openDrawer);
   const [added, setAdded] = useState(false);
-  const alreadyAdded = useInquiry((s) =>
-    s.items.some((i) => i.id === product.id),
-  );
+  const inList = useInquiry((s) => s.items.some((i) => i.id === product.id));
+  const alreadyAdded = mounted && inList;
 
   function handleAdd(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
@@ -46,11 +47,9 @@ export function ProductCard({
   }
 
   return (
-    <Link
-      href={href(`/products/${product.slug}`)}
-      className="group relative flex flex-col focus-visible:outline-none"
-    >
+    <article className="group relative flex flex-col">
       <div className="relative aspect-[4/5] overflow-hidden rounded-[1.25rem] bg-cream-200 shadow-[inset_0_0_0_1px_rgba(23,14,6,0.05)]">
+        <Link href={href(`/products/${encodeURIComponent(product.slug)}`)} aria-label={product.name} className="absolute inset-0">
         <Image
           src={firstImage(product.images)}
           alt={product.name}
@@ -59,8 +58,9 @@ export function ProductCard({
           className="object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.07]"
           priority={priority}
         />
+        </Link>
 
-        <div className="absolute start-3 top-3 flex flex-col gap-1.5">
+        <div className="pointer-events-none absolute start-3 top-3 flex flex-col gap-1.5">
           {product.badge && (
             <span className="rounded-full bg-gold-500 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-date-950 shadow-sm">
               {product.badge}
@@ -87,15 +87,15 @@ export function ProductCard({
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col pt-4">
+      <Link href={href(`/products/${encodeURIComponent(product.slug)}`)} className="flex flex-1 flex-col pt-4">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold-600">
           {categoryLabel(dict, product.category)}
         </p>
-        <h3 className="mt-1.5 font-display text-lg font-semibold leading-snug text-date-900 transition-colors group-hover:text-gold-700">
+        <h3 lang={product.contentLocale} dir="auto" className="mt-1.5 font-display text-lg font-semibold leading-snug text-date-900 transition-colors group-hover:text-gold-700">
           {product.name}
         </h3>
         <p className="mt-1 text-xs text-date-500">{product.origin}</p>
-        <p className="mt-2 line-clamp-2 text-sm text-date-600">
+        <p dir="auto" className="mt-2 line-clamp-2 text-sm text-date-600">
           {product.tagline}
         </p>
         <div className="mt-3">
@@ -103,7 +103,7 @@ export function ProductCard({
             <ClipboardList size={12} /> {dict.common.requestPricing}
           </span>
         </div>
-      </div>
-    </Link>
+      </Link>
+    </article>
   );
 }

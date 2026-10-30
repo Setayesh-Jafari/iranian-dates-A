@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Star, Check, Loader2 } from "lucide-react";
 import type { Review } from "@/lib/types";
 import { Rating } from "@/components/Rating";
 import { cn } from "@/lib/utils";
 import { useI18n } from "@/i18n/I18nProvider";
-import { formatDate, t } from "@/i18n";
+import { formatDate, formatNumber, t } from "@/i18n";
 
 const AVATAR = [
   "bg-gold-200 text-date-800",
@@ -43,6 +43,7 @@ export function ReviewsSection({
     "idle",
   );
   const [error, setError] = useState("");
+  const inFlight = useRef(false);
   const [form, setForm] = useState({
     author: "",
     location: "",
@@ -59,7 +60,8 @@ export function ReviewsSection({
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (status === "submitting") return;
+    if (inFlight.current || status === "submitting") return;
+    inFlight.current = true;
     setStatus("submitting");
     setError("");
     try {
@@ -76,13 +78,20 @@ export function ReviewsSection({
           _hp: hp,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || dict.reviews.errorGeneric);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        if (res.status === 429) throw new Error(dict.reviews.errorRateLimit);
+        if (res.status === 503 || res.status >= 500) throw new Error(dict.reviews.errorUnavailable);
+        throw new Error(dict.reviews.errorValidation);
+      }
+      if (data.status !== "pending") throw new Error(dict.reviews.errorUnavailable);
       setForm({ author: "", location: "", title: "", comment: "", rating: 5 });
       setStatus("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : dict.reviews.errorGeneric);
+      setError(err instanceof TypeError ? dict.reviews.errorUnavailable : err instanceof Error ? err.message : dict.reviews.errorGeneric);
       setStatus("error");
+    } finally {
+      inFlight.current = false;
     }
   }
 
@@ -94,12 +103,12 @@ export function ReviewsSection({
           {count > 0 ? (
             <div className="flex items-end gap-4">
               <span className="font-display text-6xl font-semibold leading-none text-date-900">
-                {rating.toFixed(1)}
+                {new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en", { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(rating)}
               </span>
               <div className="pb-1">
                 <Rating value={rating} size={18} />
                 <p className="mt-1 text-sm text-date-500">
-                  {t(dict.reviews.countReviews, { count })}
+                  {t(dict.reviews.countReviews, { count: formatNumber(count, locale) })}
                 </p>
               </div>
             </div>
@@ -113,7 +122,7 @@ export function ReviewsSection({
             {distribution.map((d) => (
               <div key={d.star} className="flex items-center gap-3 text-sm">
                 <span className="flex w-8 items-center gap-1 text-date-600">
-                  {d.star}{" "}
+                  {formatNumber(d.star, locale)}{" "}
                   <Star size={12} className="fill-gold-500 text-gold-500" />
                 </span>
                 <div className="h-2 flex-1 overflow-hidden rounded-full bg-date-900/8">
@@ -122,7 +131,7 @@ export function ReviewsSection({
                     style={{ width: `${(d.count / maxCount) * 100}%` }}
                   />
                 </div>
-                <span className="w-6 text-end text-date-400">{d.count}</span>
+                <span className="w-6 text-end text-date-400">{formatNumber(d.count, locale)}</span>
               </div>
             ))}
           </div>
@@ -166,6 +175,7 @@ export function ReviewsSection({
                     n > 1 ? dict.reviews.starsLabel : dict.reviews.starLabel,
                     { count: n },
                   )}
+                  aria-pressed={form.rating === n}
                   className="p-0.5"
                 >
                   <Star
@@ -184,10 +194,12 @@ export function ReviewsSection({
 
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide text-date-500">
+              <label htmlFor={`review-author-${productId}`} className="text-xs font-semibold uppercase tracking-wide text-date-500">
                 {dict.reviews.name}
               </label>
               <input
+                id={`review-author-${productId}`}
+                maxLength={80}
                 value={form.author}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, author: e.target.value }))
@@ -198,10 +210,12 @@ export function ReviewsSection({
               />
             </div>
             <div>
-              <label className="text-xs font-semibold uppercase tracking-wide text-date-500">
+              <label htmlFor={`review-city-${productId}`} className="text-xs font-semibold uppercase tracking-wide text-date-500">
                 {dict.reviews.city}
               </label>
               <input
+                id={`review-city-${productId}`}
+                maxLength={80}
                 value={form.location}
                 onChange={(e) =>
                   setForm((f) => ({ ...f, location: e.target.value }))
@@ -214,6 +228,8 @@ export function ReviewsSection({
 
           <div className="mt-3">
             <input
+              aria-label={dict.reviews.headlinePlaceholder}
+              maxLength={120}
               value={form.title}
               onChange={(e) =>
                 setForm((f) => ({ ...f, title: e.target.value }))
@@ -225,6 +241,9 @@ export function ReviewsSection({
 
           <div className="mt-3">
             <textarea
+              aria-label={dict.reviews.commentPlaceholder}
+              minLength={10}
+              maxLength={2000}
               value={form.comment}
               onChange={(e) =>
                 setForm((f) => ({ ...f, comment: e.target.value }))
@@ -237,10 +256,10 @@ export function ReviewsSection({
           </div>
 
           {status === "error" && (
-            <p className="mt-3 text-sm text-red-600">{error}</p>
+            <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>
           )}
           {status === "done" && (
-            <p className="mt-3 flex items-center gap-1.5 text-sm font-medium text-emerald-700">
+            <p role="status" className="mt-3 flex items-center gap-1.5 text-sm font-medium text-emerald-700">
               <Check size={16} /> {dict.reviews.thankYou}
             </p>
           )}

@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/SafeImage";
 import { useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
@@ -21,13 +21,14 @@ export function ProductGallery({
   // Filter out blank entries and guarantee at least one image so <Image>
   // never receives an empty src.
   const imgs = sanitizeImages(images);
+  const activeIndex = Math.min(active, imgs.length - 1);
 
   return (
     <div className="flex flex-col gap-4">
       <div className="relative aspect-square overflow-hidden rounded-[1.5rem] bg-cream-200 shadow-[inset_0_0_0_1px_rgba(23,14,6,0.05)]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
-            key={active}
+            key={activeIndex}
             initial={{ opacity: 0, scale: 1.02 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
@@ -35,12 +36,12 @@ export function ProductGallery({
             className="absolute inset-0"
           >
             <Image
-              src={imgs[active]}
-              alt={t(dict.product.galleryAlt, { name, index: active + 1 })}
+              src={imgs[activeIndex]}
+              alt={t(dict.product.galleryAlt, { name, index: activeIndex + 1 })}
               fill
               sizes="(min-width:1024px) 50vw, 100vw"
               className="object-cover"
-              priority={active === 0}
+              priority={activeIndex === 0}
             />
           </motion.div>
         </AnimatePresence>
@@ -53,9 +54,10 @@ export function ProductGallery({
             type="button"
             onClick={() => setActive(i)}
             aria-label={t(dict.product.viewImage, { index: i + 1 })}
+            aria-pressed={i === activeIndex}
             className={cn(
               "relative aspect-square overflow-hidden rounded-xl bg-cream-200 transition-all duration-300",
-              i === active
+              i === activeIndex
                 ? "ring-2 ring-gold-500 ring-offset-2 ring-offset-cream-50"
                 : "opacity-70 hover:opacity-100",
             )}

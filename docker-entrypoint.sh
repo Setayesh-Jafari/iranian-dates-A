@@ -2,12 +2,13 @@
 set -e
 
 # ─────────────────────────────────────────────────────────────────────────
-# DATA SAFETY: this startup script must never modify application data.
+# DATA SAFETY: default startup must never modify application data.
 #   - It NEVER runs the destructive seed (src/db/seed.ts truncates tables).
-#   - It NEVER truncates, resets or wipes anything.
-#   - Schema sync (drizzle-kit push) runs ONLY if the operator explicitly
-#     sets RUN_SCHEMA_PUSH=1 (schema-only; never seeds data). It is for
-#     development/staging bootstrap only and fails loudly if it errors.
+#   - It does not itself truncate, reset or wipe anything; the optional schema
+#     push may modify or remove data if explicitly and unsafely enabled.
+#   - Schema sync (drizzle-kit push) can be destructive and is NEVER run by
+#     default. In a production-mode container, it also requires an explicit
+#     unsafe override and must only target a disposable development database.
 # A plain container restart therefore never changes or deletes existing
 # database data.
 # ─────────────────────────────────────────────────────────────────────────
@@ -35,7 +36,11 @@ done
 echo "Database ready."
 
 if [ "${RUN_SCHEMA_PUSH:-0}" = "1" ]; then
-  echo "RUN_SCHEMA_PUSH=1 set: running 'drizzle-kit push' (schema sync only; never seeds or truncates application data)..."
+  if [ "${NODE_ENV:-}" = "production" ] && [ "${ALLOW_UNSAFE_SCHEMA_PUSH:-0}" != "1" ]; then
+    echo "FATAL: automatic schema push is disabled in production-mode containers. Use reviewed migrations." >&2
+    exit 1
+  fi
+  echo "WARNING: drizzle-kit push can alter or delete schema/data; use only against a disposable database." >&2
   npx drizzle-kit push
 fi
 

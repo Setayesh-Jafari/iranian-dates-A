@@ -8,6 +8,7 @@ import {
   boolean,
   jsonb,
   index,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import type { StoredInquiryItem } from "@/lib/inquiry";
 
@@ -29,6 +30,8 @@ export const products = pgTable(
     rating: real("rating").notNull().default(0),
     reviewCount: integer("review_count").notNull().default(0),
     stock: integer("stock").notNull().default(10),
+    // New records must be explicitly reviewed before public exposure.
+    published: boolean("published").notNull().default(false),
     featured: boolean("featured").notNull().default(false),
     isNew: boolean("is_new").notNull().default(false),
     badge: text("badge"),
@@ -39,8 +42,24 @@ export const products = pgTable(
   (table) => [
     index("products_category_idx").on(table.category),
     index("products_featured_idx").on(table.featured),
+    index("products_published_idx").on(table.published),
   ]
 );
+
+/** Optional, owner-maintained localized catalog copy; base product stays unchanged. */
+export const productTranslations = pgTable("product_translations", {
+  productId: integer("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  locale: text("locale").notNull(),
+  name: text("name"),
+  tagline: text("tagline"),
+  description: text("description"),
+  details: text("details"),
+  origin: text("origin"),
+  weight: text("weight"),
+  unit: text("unit"),
+  badge: text("badge"),
+  highlights: jsonb("highlights").$type<string[]>(),
+}, (table) => [primaryKey({ columns: [table.productId, table.locale] })]);
 
 export const reviews = pgTable(
   "reviews",
@@ -79,6 +98,26 @@ export const inquiries = pgTable("inquiries", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+export type ProductTranslationRow = typeof productTranslations.$inferSelect;
 export type ProductRow = typeof products.$inferSelect;
 export type ReviewRow = typeof reviews.$inferSelect;
 export type InquiryRow = typeof inquiries.$inferSelect;
+
+/** Shared, atomic counters for public write endpoints across all instances. */
+export const rateLimitBuckets = pgTable(
+  "rate_limit_buckets",
+  {
+    key: text("key").primaryKey(),
+    count: integer("count").notNull(),
+    resetAt: timestamp("reset_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [index("rate_limit_buckets_reset_at_idx").on(table.resetAt)],
+);
+
+/** Idempotency claims and inquiries are written in the same DB transaction. */
+export const inquirySubmissionKeys = pgTable("inquiry_submission_keys", {
+  key: text("key").primaryKey(),
+  payloadHash: text("payload_hash").notNull(),
+  inquiryId: text("inquiry_id").notNull().references(() => inquiries.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

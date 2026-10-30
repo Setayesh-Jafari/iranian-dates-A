@@ -14,6 +14,8 @@ import {
   getRelatedProducts,
   getReviewsForProduct,
 } from "@/lib/queries";
+import { pageMetadata, isPublicProductSlug } from "@/lib/seo";
+import { firstImage } from "@/lib/images";
 import { ProductGallery } from "@/components/ProductGallery";
 import { ProductPurchase } from "@/components/ProductPurchase";
 import { ReviewsSection } from "@/components/ReviewsSection";
@@ -43,12 +45,13 @@ export async function generateMetadata({
   const { locale: raw, slug } = await params;
   const locale = resolveLocale(raw) ?? DEFAULT_LOCALE;
   const dict = getDictionary(locale);
-  const product = await getProductBySlug(slug);
-  if (!product) return { title: dict.meta.productNotFound };
-  return {
-    title: product.name,
-    description: product.description,
-  };
+  if (!isPublicProductSlug(slug)) return { title: dict.meta.productNotFound, robots: { index: false, follow: true }, alternates: null, openGraph: null, twitter: null };
+  const product = await getProductBySlug(slug, locale);
+  if (!product) return { title: dict.meta.productNotFound, robots: { index: false, follow: true }, alternates: null, openGraph: null, twitter: null };
+  return pageMetadata({
+    locale, path: `/products/${encodeURIComponent(slug)}`,
+    title: product.name, description: product.description, image: firstImage(product.images),
+  });
 }
 
 export default async function ProductPage({
@@ -58,17 +61,17 @@ export default async function ProductPage({
 }) {
   const { locale: raw, slug } = await params;
   const locale = resolveLocale(raw);
-  if (!locale) notFound();
+  if (!locale || !isPublicProductSlug(slug)) notFound();
 
   const dict = getDictionary(locale);
   const rtl = dirOf(locale) === "rtl";
 
-  const product = await getProductBySlug(slug);
+  const product = await getProductBySlug(slug, locale);
   if (!product) notFound();
 
   const [reviews, related] = await Promise.all([
     getReviewsForProduct(product.id),
-    getRelatedProducts(product, 4),
+    getRelatedProducts(product, 4, locale),
   ]);
 
   return (
@@ -116,10 +119,10 @@ export default async function ProductPage({
               )}
             </div>
 
-            <h1 className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight text-date-900 sm:text-4xl lg:text-[2.75rem]">
+            <h1 lang={product.contentLocale} dir="auto" className="mt-3 font-display text-3xl font-semibold leading-tight tracking-tight text-date-900 sm:text-4xl lg:text-[2.75rem]">
               {product.name}
             </h1>
-            <p className="mt-2 text-base text-date-600">{product.tagline}</p>
+            <p dir="auto" className="mt-2 text-base text-date-600">{product.tagline}</p>
 
             {product.reviewCount > 0 ? (
               <a href="#reviews" className="mt-4 inline-flex items-center gap-2">
@@ -152,7 +155,7 @@ export default async function ProductPage({
               </span>
             </div>
 
-            <p className="mt-6 leading-relaxed text-date-700">
+            <p lang={product.contentLocale} dir="auto" className="mt-6 leading-relaxed text-date-700">
               {product.description}
             </p>
 

@@ -70,6 +70,7 @@ export const en = {
     sortBy: "Sort products by",
     closeFilters: "Close filters",
     clearAllFilters: "Clear all filters",
+    imageUnavailable: "Image unavailable",
     searchPlaceholder: "Search dates…",
     allProducts: "All Products",
     category: "Category",
@@ -170,6 +171,7 @@ export const en = {
     flagshipAlt: "Mazafati dates (placeholder stock imagery)",
     fullDetails: "Full details",
 
+    catalogUnavailable: "The catalog is temporarily unavailable. Please try again later.",
     featuredEyebrow: "Export range",
     featuredTitle: "Our product catalog",
     featuredText:
@@ -408,6 +410,11 @@ export const en = {
     errorQuantity:
       "Please enter a requested quantity (a number greater than zero) for every product in your inquiry list.",
     errorGeneric: "Something went wrong — please try again.",
+    errorTooManyItems: "An inquiry can include up to 20 products. Please remove some items.",
+    errorValidation: "Please check the contact details, product quantities and units, then try again.",
+    errorRateLimit: "Too many attempts. Please wait before trying again.",
+    errorUnavailable: "We could not confirm your inquiry. Please retry with the same details; your list has been kept.",
+    errorConflict: "These details changed after the request was sent. Please try again.",
     successTitle: "Inquiry submitted!",
     successBody:
       "Your inquiry {id} has been received and recorded. Please keep your reference number for any follow-up.",
@@ -448,6 +455,9 @@ export const en = {
     submit: "Submit review",
     thankYou: "Thank you! Your review will be published after it is checked.",
     errorGeneric: "Something went wrong",
+    errorValidation: "Please check your review details and try again.",
+    errorRateLimit: "Too many attempts. Please wait before trying again.",
+    errorUnavailable: "We could not submit your review. Please try again later.",
     ratedOutOf: "Rated {value} out of 5",
   },
 

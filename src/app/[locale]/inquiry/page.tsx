@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/SafeImage";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,13 +14,19 @@ import {
 } from "lucide-react";
 import { useInquiry } from "@/store/cart";
 import {
+  FIELD_LIMITS,
   INQUIRY_COUNTRIES,
+  MAX_INQUIRY_ITEMS,
+  MAX_QUANTITY_VALUE,
+  normalizeDigits,
   MAX_MESSAGE_LENGTH,
   QUANTITY_UNITS,
   type InquiryUnit,
 } from "@/lib/inquiry";
 import { useI18n } from "@/i18n/I18nProvider";
 import { countryLabel, t, unitLabel } from "@/i18n";
+import { firstImage } from "@/lib/images";
+import { useMounted } from "@/lib/useMounted";
 
 const COUNTRIES = INQUIRY_COUNTRIES;
 
@@ -51,12 +57,13 @@ function Field({
 /** Client-side convenience check; the server validates again authoritatively. */
 function isValidQuantity(value: string | undefined): boolean {
   if (!value || value.trim() === "") return false;
-  const n = Number(value);
-  return Number.isFinite(n) && n > 0;
+  const n = Number(normalizeDigits(value));
+  return Number.isFinite(n) && n > 0 && n <= MAX_QUANTITY_VALUE;
 }
 
 export default function InquiryPage() {
   const { dict, dir, href } = useI18n();
+  const mounted = useMounted();
   const items = useInquiry((s) => s.items);
   const updateItem = useInquiry((s) => s.updateItem);
   const clear = useInquiry((s) => s.clear);
@@ -65,6 +72,8 @@ export default function InquiryPage() {
   );
   const [inquiryId, setInquiryId] = useState("");
   const [error, setError] = useState("");
+  const inFlight = useRef(false);
+  const submission = useRef<{ payload: string; key: string } | null>(null);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -88,47 +97,62 @@ export default function InquiryPage() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (status !== "form") return; // double-submission guard
-    if (items.length === 0) {
-      setError(dict.inquiry.errorEmptyList);
+    if (inFlight.current || status !== "form") return;
+    if (items.length === 0 || items.length > MAX_INQUIRY_ITEMS) {
+      setError(items.length ? dict.inquiry.errorTooManyItems : dict.inquiry.errorEmptyList);
       return;
     }
     if (items.some((i) => !isValidQuantity(i.quantity))) {
       setError(dict.inquiry.errorQuantity);
       return;
     }
+    const payload = JSON.stringify({
+      items: items.map((i) => ({
+        slug: i.slug,
+        quantity: Number(normalizeDigits(i.quantity ?? "")),
+        unit: i.unit ?? "kg",
+      })),
+      customer: form,
+      _hp: hp,
+    });
+    // A retry of unchanged details keeps the same key, even after a network
+    // timeout. Nothing containing buyer details is persisted to browser storage.
+    if (!submission.current || submission.current.payload !== payload) {
+      submission.current = { payload, key: crypto.randomUUID() };
+    }
+    inFlight.current = true;
     setStatus("submitting");
     setError("");
     try {
       const res = await fetch("/api/inquiry", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: items.map((i) => ({
-            slug: i.slug,
-            quantity: Number(i.quantity),
-            unit: i.unit ?? "kg",
-          })),
-          customer: form,
-          _hp: hp,
-        }),
+        headers: { "Content-Type": "application/json", "Idempotency-Key": submission.current.key },
+        body: payload,
       });
-      const data = (await res.json().catch(() => ({}))) as {
-        error?: string;
-        inquiryId?: string;
-      };
-      if (!res.ok)
-        throw new Error(data.error || dict.inquiry.errorGeneric);
-      setInquiryId(data.inquiryId ?? "");
+      const data = (await res.json().catch(() => ({}))) as { inquiryId?: unknown };
+      if (!res.ok) {
+        if (res.status === 429) throw new Error(dict.inquiry.errorRateLimit);
+        if (res.status === 503 || res.status >= 500) throw new Error(dict.inquiry.errorUnavailable);
+        if (res.status === 409) throw new Error(dict.inquiry.errorConflict);
+        throw new Error(dict.inquiry.errorValidation);
+      }
+      // Do not clear the list or claim success without a server reference.
+      if (typeof data.inquiryId !== "string" || !data.inquiryId) throw new Error(dict.inquiry.errorUnavailable);
+      setInquiryId(data.inquiryId);
       setStatus("submitted");
       clear();
+      submission.current = null;
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : dict.inquiry.errorGeneric,
-      );
+      setError(err instanceof TypeError ? dict.inquiry.errorUnavailable :
+        err instanceof Error ? err.message : dict.inquiry.errorGeneric);
       setStatus("form");
+    } finally {
+      inFlight.current = false;
     }
   }
+
+  // Persisted inquiry items must not be read before hydration completes.
+  if (!mounted) return <div className="min-h-[40vh]" aria-busy="true" />;
 
   // Success state
   if (status === "submitted" && inquiryId) {
@@ -228,6 +252,7 @@ export default function InquiryPage() {
               <Field label={dict.inquiry.fullName} required>
                 <input
                   required
+                  maxLength={FIELD_LIMITS.name}
                   value={form.name}
                   onChange={(e) => set("name", e.target.value)}
                   placeholder={dict.inquiry.fullNamePlaceholder}
@@ -237,6 +262,7 @@ export default function InquiryPage() {
               <Field label={dict.inquiry.companyName} required>
                 <input
                   required
+                  maxLength={FIELD_LIMITS.company}
                   value={form.company}
                   onChange={(e) => set("company", e.target.value)}
                   placeholder={dict.inquiry.companyNamePlaceholder}
@@ -247,6 +273,8 @@ export default function InquiryPage() {
                 <input
                   type="email"
                   required
+                  maxLength={FIELD_LIMITS.email}
+                  dir="ltr"
                   value={form.email}
                   onChange={(e) => set("email", e.target.value)}
                   placeholder={dict.inquiry.businessEmailPlaceholder}
@@ -257,6 +285,8 @@ export default function InquiryPage() {
                 <input
                   type="tel"
                   required
+                  maxLength={FIELD_LIMITS.phone}
+                  dir="ltr"
                   value={form.phone}
                   onChange={(e) => set("phone", e.target.value)}
                   placeholder={dict.inquiry.phonePlaceholder}
@@ -354,7 +384,7 @@ export default function InquiryPage() {
                 <li key={i.id} className="flex items-start gap-3">
                   <div className="relative h-12 w-10 shrink-0 overflow-hidden rounded-lg bg-cream-200">
                     <Image
-                      src={i.image}
+                      src={firstImage([i.image])}
                       alt={i.name}
                       fill
                       sizes="40px"
@@ -367,17 +397,15 @@ export default function InquiryPage() {
                     </p>
                     <div className="mt-2 flex items-center gap-2">
                       <input
-                        type="number"
+                        type="text"
                         inputMode="decimal"
-                        min="1"
-                        step="any"
                         aria-label={t(dict.inquiry.quantityAria, {
                           name: i.name,
                         })}
                         placeholder={dict.inquiry.quantityPlaceholder}
                         value={i.quantity ?? ""}
                         onChange={(e) =>
-                          updateItem(i.id, { quantity: e.target.value })
+                          updateItem(i.id, { quantity: normalizeDigits(e.target.value) })
                         }
                         className="w-24 rounded-lg border border-date-900/12 bg-cream-50 px-2.5 py-1.5 text-sm text-date-900 placeholder:text-date-400 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20"
                       />
@@ -414,7 +442,7 @@ export default function InquiryPage() {
             </div>
 
             {error && (
-              <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+              <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
                 {error}
               </p>
             )}

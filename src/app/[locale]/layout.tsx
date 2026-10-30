@@ -13,9 +13,9 @@ import {
   LOCALE_TAGS,
   dir as dirOf,
   isLocale,
-  localePath,
   type Locale,
 } from "@/i18n/config";
+import { pageMetadata } from "@/lib/seo";
 
 /**
  * Root layout for the localized route tree: `app/[locale]/**`.
@@ -41,42 +41,10 @@ export async function generateMetadata({
   const locale = resolveLocale(raw);
   const dict = getDictionary(locale);
 
-  // Set NEXT_PUBLIC_SITE_URL once the business verifies its public domain.
-  const base = new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
-  );
-
-  return {
-    metadataBase: base,
-    title: {
-      default: dict.meta.title,
-      template: dict.meta.template,
-    },
-    description: dict.meta.description,
-    keywords: [
-      "Iranian dates export",
-      "Mazafati dates wholesale",
-      "Piarom dates",
-      "date exporter Iran",
-      "wholesale dates",
-      "bulk dates supplier",
-    ],
-    alternates: {
-      canonical: new URL(localePath(locale), base).toString(),
-      languages: Object.fromEntries(
-        LOCALES.map((candidate) => [
-          LOCALE_TAGS[candidate],
-          new URL(localePath(candidate), base).toString(),
-        ]),
-      ),
-    },
-    openGraph: {
-      title: dict.meta.title,
-      description: dict.meta.description,
-      type: "website",
-      locale: LOCALE_TAGS[locale],
-    },
-  };
+  const metadata = await pageMetadata({
+    locale, path: "/", title: dict.meta.title, description: dict.meta.description,
+  });
+  return { ...metadata, title: { default: dict.meta.title, template: dict.meta.template } };
 }
 
 export const viewport: Viewport = {

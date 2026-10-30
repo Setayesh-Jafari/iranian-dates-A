@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { SafeImage as Image } from "@/components/SafeImage";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
 import { useEffect, useRef } from "react";

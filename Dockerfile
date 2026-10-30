@@ -35,8 +35,11 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 # seeds or truncates — see docker-entrypoint.sh.
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
-COPY drizzle.config.ts ./
+COPY drizzle.config.ts tsconfig.json ./
 COPY src/db ./src/db
+COPY src/lib/moderation.ts ./src/lib/moderation.ts
+COPY scripts ./scripts
+COPY migrations ./migrations
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 

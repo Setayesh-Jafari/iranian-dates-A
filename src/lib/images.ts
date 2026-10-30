@@ -1,40 +1,28 @@
-/**
- * Shared image helpers for products.
- *
- * Centralises the fallback image used when a product has no images so every
- * surface (cards, buttons, cart drawer, inquiry list, gallery) renders a
- * valid URL instead of passing "" to next/image.
- */
+/** Only local files and the configured remote image host are accepted. */
+export const FALLBACK_IMAGE = "/product-placeholder.svg";
 
-// Neutral fallback used only when a product has no images attached.
-// NOTE: placeholder imagery — not verified product photography.
-// Host must be whitelisted in next.config.ts (images.pexels.com is).
-export const FALLBACK_IMAGE =
-  "https://images.pexels.com/photos/15913423/pexels-photo-15913423.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1200&h=900";
-
-/**
- * Returns the first valid image URL from a product's `images` array, or the
- * FALLBACK_IMAGE when the array is missing/empty/contains only blank strings.
- * Guarantees callers always receive a non-empty URL suitable for next/image.
- */
-export function firstImage(images: string[] | undefined | null): string {
-  if (!images) return FALLBACK_IMAGE;
-  for (const src of images) {
-    if (isValidImageSrc(src)) return src;
+function validImageSrc(src: unknown): string | null {
+  if (typeof src !== "string") return null;
+  const value = src.trim();
+  if (!value || /[\u0000-\u001f\u007f\\]/.test(value)) return null;
+  if (value.startsWith("/") && !value.startsWith("//")) {
+    try {
+      const url = new URL(value, "https://local.invalid");
+      return url.origin === "https://local.invalid" ? value : null;
+    } catch { return null; }
   }
-  return FALLBACK_IMAGE;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && url.hostname === "images.pexels.com" &&
+      !url.port && !url.username && !url.password ? url.toString() : null;
+  } catch { return null; }
 }
 
-/**
- * Returns a new array containing only valid image URLs, with FALLBACK_IMAGE
- * appended when the input contained no valid entries. Useful for surfaces
- * that iterate over every image (thumbnails, gallery).
- */
+export function firstImage(images: string[] | undefined | null): string {
+  return sanitizeImages(images)[0];
+}
+
 export function sanitizeImages(images: string[] | undefined | null): string[] {
-  const valid = images?.filter(isValidImageSrc) ?? [];
-  return valid.length > 0 ? valid : [FALLBACK_IMAGE];
-}
-
-function isValidImageSrc(src: unknown): src is string {
-  return typeof src === "string" && src.trim() !== "";
+  const valid = Array.isArray(images) ? images.map(validImageSrc).filter((src): src is string => !!src) : [];
+  return valid.length ? valid : [FALLBACK_IMAGE];
 }

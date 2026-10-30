@@ -56,3 +56,12 @@ export type StoredInquiryItem = {
   quantity: number;
   unit: InquiryUnit;
 };
+
+/** Normalize Persian/Arabic-Indic digits without changing the represented value. */
+export function normalizeDigits(value: string): string {
+  return value.replace(/[۰-۹٠-٩٫]/g, (character) => {
+    if (character === "٫") return ".";
+    const code = character.charCodeAt(0);
+    return String(code >= 0x06f0 ? code - 0x06f0 : code - 0x0660);
+  });
+}

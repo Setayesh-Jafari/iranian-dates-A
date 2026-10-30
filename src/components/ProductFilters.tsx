@@ -8,7 +8,7 @@ import { CATEGORIES } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { EASE } from "@/lib/motion";
 import { useI18n } from "@/i18n/I18nProvider";
-import { categoryLabel, t } from "@/i18n";
+import { categoryLabel, formatNumber, t } from "@/i18n";
 
 export type FilterState = {
   q?: string;
@@ -28,7 +28,7 @@ export function ProductFilters({
   total: number;
   children: ReactNode;
 }) {
-  const { dict, dir, href } = useI18n();
+  const { dict, dir, href, locale } = useI18n();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState(filters.q ?? "");
@@ -88,11 +88,12 @@ export function ProductFilters({
 
   const activeCount = [
     filters.category,
+    filters.q ? "search" : undefined,
     filters.rating ? "rating" : undefined,
   ].filter(Boolean).length;
 
   function go(overrides: Partial<FilterState>) {
-    router.push(buildUrl({ ...filters, ...overrides }), { scroll: false });
+    router.push(buildUrl({ ...filters, q: q.trim() || undefined, ...overrides }), { scroll: false });
     setOpen(false);
   }
 
@@ -125,7 +126,7 @@ export function ProductFilters({
                 !filters.category ? "text-cream-100/60" : "text-date-400",
               )}
             >
-              {total}
+              {formatNumber(Object.values(facets).reduce((sum, count) => sum + count, 0), locale)}
             </span>
           </button>
           {CATEGORIES.map((c) => (
@@ -149,7 +150,7 @@ export function ProductFilters({
                     : "text-date-400",
                 )}
               >
-                {facets[c.slug] ?? 0}
+                {formatNumber(facets[c.slug] ?? 0, locale)}
               </span>
             </button>
           ))}
@@ -221,7 +222,7 @@ export function ProductFilters({
             )}
           </button>
           <p className="text-sm text-date-500">
-            <span className="font-semibold text-date-900">{total}</span> {noun}
+            <span className="font-semibold text-date-900">{formatNumber(total, locale)}</span> {noun}
           </p>
         </div>
 
@@ -234,6 +235,8 @@ export function ProductFilters({
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
+              aria-label={dict.common.searchPlaceholder}
+              maxLength={100}
               placeholder={dict.common.searchPlaceholder}
               className="w-56 rounded-full border border-date-900/12 bg-white py-2.5 pe-4 ps-10 text-sm focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20"
             />
@@ -268,6 +271,8 @@ export function ProductFilters({
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
+          aria-label={dict.common.searchPlaceholder}
+          maxLength={100}
           placeholder={dict.common.searchPlaceholder}
           className="w-full rounded-full border border-date-900/12 bg-white py-3 pe-4 ps-10 text-sm focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/20"
         />
